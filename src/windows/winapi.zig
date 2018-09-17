@@ -55,11 +55,11 @@ pub const VK_ESCAPE = 27;
 
 pub const GWLP_USERDATA = -21;
 
-pub const WNDPROC = stdcallcc fn(para1: HWND, para2: UINT, para3: WPARAM, para4: LPARAM)  LRESULT;
+pub const WNDPROC = stdcallcc fn(HWND, UINT, WPARAM, LPARAM) LRESULT;
   
 pub const WNDCLASS = extern struct {
     style: UINT,
-    lpfnWndProc: *const WNDPROC,
+    lpfnWndProc: ?*const WNDPROC,
     cbClsExtra: c_int,
     cbWndExtra: c_int,
     hInstance: HANDLE,

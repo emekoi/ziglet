@@ -36,6 +36,8 @@ pub const Window = struct {
     export stdcallcc fn wnd_proc(hWnd: HWND, msg: UINT, wParam: WPARAM, lParam: LPARAM) LRESULT {
         var result: LRESULT = 0;
 
+        std.debug.warn("wnd_proc called\n");
+
         var window = @intToPtr(?*Self, GetWindowLongPtrW(hWnd, GWLP_USERDATA)) orelse return DefWindowProcW(hWnd, msg, wParam, lParam);
 
         switch (msg) {
@@ -58,9 +60,9 @@ pub const Window = struct {
         //     .lpfnWndProc = &Self.wnd_proc,
         //     .cbClsExtra = 0,
         //     .cbWndExtra = 0,
-        //     .hInstance = undefined,
+        //     .hInstance = GetModuleHandleW(null),
         //     .hIcon = undefined,
-        //     .hCursor = undefined, // LoadCursorW(null, IDC_ARROW) orelse return error.CreateError;
+        //     .hCursor = LoadCursorW(null, IDC_ARROW) orelse return error.CreateError,
         //     .hbrBackground = undefined,
         //     .lpszMenuName = undefined,
         //     .lpszClassName = wtitle[0..].ptr,
@@ -71,6 +73,7 @@ pub const Window = struct {
         result.window_class.lpfnWndProc = &Self.wnd_proc;
         result.window_class.hCursor = LoadCursorW(null, IDC_ARROW) orelse return error.CreateError;
         result.window_class.lpszClassName = wtitle[0..].ptr;
+        result.window_class.hInstance = GetModuleHandleW(null);
 
         if (RegisterClassW(&result.window_class) == 0) {
             return error.CreateError;
@@ -87,25 +90,22 @@ pub const Window = struct {
             return error.CreateError;
         }
 
-        std.debug.warn("GAT\n");
-
         rect.right -= rect.left;
         rect.bottom -= rect.top;
 
         result.width = width;
         result.height = height;
         
-        std.debug.warn("BAR\n");
+        std.debug.warn("START\n");
 
         result.window_handle = CreateWindowExW(0, 
             wtitle[0..].ptr, wtitle[0..].ptr,
             WS_OVERLAPPEDWINDOW & ~WS_MAXIMIZEBOX & ~WS_THICKFRAME,
-            CW_USEDEFAULT, CW_USEDEFAULT,
-            rect.right, rect.bottom,
-            null, null, null, null
+            CW_USEDEFAULT, CW_USEDEFAULT, rect.right, rect.bottom,
+            null, null, result.window_class.hInstance, null
         ) orelse return error.CreateError;
 
-        std.debug.warn("FOO\n");
+        std.debug.warn("END\n");
 
 
         _ = ShowWindow(result.window_handle, SW_NORMAL);

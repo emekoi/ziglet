@@ -11,7 +11,6 @@ use @import("ziglet");
 
 pub fn main() !void {
     var w = Window.new("foo", 512, 512) catch |err| {
-        std.debug.warn("{}", GetLastError());
         return err;
     };
 

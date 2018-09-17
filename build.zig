@@ -6,7 +6,7 @@ pub const Executable = struct {
     input: []const u8,
 };
 
-const executables = []Executable {
+const examples = []Executable {
     Executable { .output = "../bin/basic", .input = "examples/basic.zig"},
 };
 
@@ -14,8 +14,8 @@ pub fn build(b: *Builder) !void {
     const mode = b.standardReleaseOptions();
     try b.makePath("bin");
 
-    for (executables) |file| {
-        const exe = b.addExecutable(file.output, file.input);
+    for (examples) |example| {
+        const exe = b.addExecutable(example.output, example.input);
         exe.addPackagePath("ziglet", "src/index.zig");
         exe.setBuildMode(mode);
         b.default_step.dependOn(&exe.step);

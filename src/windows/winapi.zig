@@ -59,7 +59,7 @@ pub const WNDPROC = stdcallcc fn(HWND, UINT, WPARAM, LPARAM) LRESULT;
   
 pub const WNDCLASS = extern struct {
     style: UINT,
-    lpfnWndProc: ?*const WNDPROC,
+    lpfnWndProc: ?WNDPROC,
     cbClsExtra: c_int,
     cbWndExtra: c_int,
     hInstance: HANDLE,

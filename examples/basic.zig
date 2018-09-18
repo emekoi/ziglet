@@ -16,6 +16,10 @@ pub fn main() !void {
 
     while (!w.should_close) {
         w.update();
+
+        if (w.is_down(Key.Space)) {
+            std.debug.warn("space is down\n");
+        }
     }
 
     try w.close();

@@ -39,15 +39,19 @@ pub const WM_QUIT = 0x0012;
 
 pub const IDC_ARROW = @intToPtr(MAKEINTRESOURCE, 32512);
 
-pub const CW_USEDEFAULT: c_int = -1;
-pub const WS_CAPTION = DWORD(0x00C00000);
-pub const WS_OVERLAPPEDWINDOW = DWORD(0x00CF0000);
-pub const WS_MAXIMIZEBOX = DWORD(0x00010000);
-pub const WS_POPUP = DWORD(0x80000000);
-pub const WS_SYSMENU = DWORD(0x00080000);
-pub const WS_THICKFRAME = DWORD(0x00040000);
+pub const CW_USEDEFAULT = -1;
+
+pub const WS_CAPTION = 0x00C00000;
+pub const WS_OVERLAPPEDWINDOW = 0x00CF0000;
+pub const WS_MAXIMIZEBOX = 0x00010000;
+pub const WS_POPUP = 0x80000000;
+pub const WS_SYSMENU = 0x00080000;
+pub const WS_THICKFRAME = 0x00040000;
 
 pub const SW_NORMAL = 1;
+
+pub const SWP_NOSIZE = 0x0001;
+pub const SWP_SHOWWINDOW = 0x0040;
 
 pub const PM_REMOVE = 1;
 
@@ -83,7 +87,7 @@ pub const POINT = extern struct {
 };
 
 pub const MSG = extern struct {
-    hwnd: HWND,
+    hWnd: HWND,
     message: UINT,
     wParam: WPARAM,
     lParam: LPARAM,
@@ -94,8 +98,6 @@ pub const MSG = extern struct {
 pub extern "user32" stdcallcc fn LoadCursorW(hInstance: ?HINST, lpCursorName: LPCWSTR) ?HCURSOR;
 
 pub extern "user32" stdcallcc fn RegisterClassW(lpWndClass: LPWNDCLASS) ATOM;
-
-pub extern "user32" stdcallcc fn UnregisterClassW(lpClassName: LPCWSTR, hInstance: HINST) BOOL;
 
 pub extern "user32" stdcallcc fn AdjustWindowRect(lpRect: LPRECT, dwStyle: DWORD, bMenu: BOOL) BOOL;
 
@@ -113,15 +115,8 @@ pub extern "user32" stdcallcc fn GetDC(wnd: HWND) ?HDC;
 
 pub extern "user32" stdcallcc fn ReleaseDC(wnd: HWND, hDC: HDC) c_int;
 
-pub extern "user32" stdcallcc fn SetPropW(wnd: HWND, lpString: LPCWSTR, hData: HANDLE) BOOL;
-
-pub extern "user32" stdcallcc fn GetPropW(wnd: HWND, lpString: LPCWSTR) ?HANDLE;
-
-pub extern "user32" stdcallcc fn RemovePropW(wnd: HWND, lpString: LPCWSTR) ?HANDLE;
-
-pub extern "user32" stdcallcc fn GetClientRect(wnd: HWND, lpRect: LPRECT) BOOL;
-
-pub extern "user32" stdcallcc fn PeekMessageW(lpMsg: *TMSG, wnd: HWND, wMsgFilterMin: UINT, wMsgFilterMax: UINT, wRemoveMsg: UINT) BOOL;
+pub extern "user32" stdcallcc fn PeekMessageW(lpMsg: *TMSG, wnd: HWND, wMsgFilterMin: UINT,
+                    wMsgFilterMax: UINT, wRemoveMsg: UINT) BOOL;
 
 pub extern "user32" stdcallcc fn TranslateMessage(lpMsg: LPMSG) BOOL;
 
@@ -129,6 +124,13 @@ pub extern "user32" stdcallcc fn DispatchMessageW(lpMsg: LPMSG) LONG;
 
 pub extern "user32" stdcallcc fn DefWindowProcW(wnd: HWND, msg: UINT, wp: WPARAM, lp: LPARAM) LRESULT;
 
-pub extern "user32" stdcallcc fn GetWindowLongPtrW(hwnd: HWND, nIndex: c_int) LONG_PTR;
+pub extern "user32" stdcallcc fn GetWindowLongPtrW(hWnd: HWND, nIndex: c_int) LONG_PTR;
 
-pub extern "user32" stdcallcc fn SetWindowLongPtrW(hwnd: HWND, nIndex: c_int, dwNewLong: LONG_PTR) LONG_PTR;
+pub extern "user32" stdcallcc fn SetWindowLongPtrW(hWnd: HWND, nIndex: c_int, dwNewLong: LONG_PTR) LONG_PTR;
+
+pub extern "user32" stdcallcc fn SetWindowTextW(hWnd: HWND, lpString: LPCWSTR) BOOL;
+
+pub extern "user32" stdcallcc fn SetWindowPos(hWnd: HWND, hWndInsertAfter: ?HWND,
+                    X: c_int, Y: c_int, cx: c_int, cy: c_int, uFlags: UINT) BOOL;
+
+pub extern "user32" stdcallcc fn GetForegroundWindow() ?HWND;

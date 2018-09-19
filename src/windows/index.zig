@@ -5,17 +5,21 @@
 //
 
 const std = @import("std");
-const util = @import("util.zig");
-pub use @import("input.zig");
-pub use @import("winapi.zig");
+const super = @import("../index.zig");
+const util = @import("../util.zig");
+
+use @import("../input.zig");
+use @import("user32.zig");
 
 pub const Window = struct {
     const Self = @This();
     
-    window_class: WNDCLASS,
-    window_handle: HWND,
-    device_context: HDC,
+    handle: HWND,
+    dc: HDC,
+
     keyboard: Keyboard,
+    // mouse: Mouse,
+
     should_close: bool,
     width: i32,
     height: i32,
@@ -48,18 +52,18 @@ pub const Window = struct {
         return result;
     }
 
-    pub fn new(title: []const u8, width: i32, height: i32) !Self {
-        var result: Self = undefined;
-
+    fn open_window(title: []const u8, width: i32, height: i32, opts: super.WindowOptions) !HWND {
         const wtitle = try util.to_wstring(title);
+        var result: HWND = undefined;
+        var window_class: WNDCLASS = undefined;
 
-        result.window_class.style = CS_OWNDC | CS_VREDRAW | CS_HREDRAW;
-        result.window_class.lpfnWndProc = Self.wnd_proc;
-        result.window_class.hCursor = LoadCursorW(null, IDC_ARROW) orelse return error.CreateError;
-        result.window_class.lpszClassName = wtitle[0..].ptr;
-        result.window_class.hInstance = GetModuleHandleW(null);
+        window_class.style = CS_OWNDC | CS_VREDRAW | CS_HREDRAW;
+        window_class.lpfnWndProc = Self.wnd_proc;
+        window_class.hCursor = LoadCursorW(null, IDC_ARROW) orelse return error.CreateError;
+        window_class.lpszClassName = wtitle[0..].ptr;
+        window_class.hInstance = GetModuleHandleW(null);
 
-        if (RegisterClassW(&result.window_class) == 0) {
+        if (RegisterClassW(&window_class) == 0) {
             return error.CreateError;
         }
 
@@ -77,25 +81,74 @@ pub const Window = struct {
         rect.right -= rect.left;
         rect.bottom -= rect.top;
 
+        var flags: DWORD = 0;
+
+        if (opts.title) flags |= DWORD(WS_OVERLAPPEDWINDOW);
+
+        if (opts.resize) {
+            flags |= DWORD(WS_THICKFRAME) | DWORD(WS_MAXIMIZEBOX);
+        } else {
+            flags &= ~DWORD(WS_MAXIMIZEBOX);
+            flags &= ~DWORD(WS_THICKFRAME);
+        }
+
+        if (opts.borderless) flags &= ~DWORD(WS_THICKFRAME);
+
+        result = CreateWindowExW(0, 
+            wtitle[0..].ptr, wtitle[0..].ptr, flags,
+            CW_USEDEFAULT, CW_USEDEFAULT, rect.right, rect.bottom,
+            null, null, window_class.hInstance, null
+        ) orelse return error.CreateError;
+
+        _ = ShowWindow(result, SW_NORMAL);
+
+
+        return result;
+    }
+
+    pub fn new(title: []const u8, width: i32, height: i32, opts: super.WindowOptions) !Self {
+        var result: Self = undefined;
+
+        result.handle = try Self.open_window(title, width, height, opts); 
+        result.dc = GetDC(result.handle) orelse return error.CreateError;
+        result.keyboard = Keyboard.new();
         result.width = width;
         result.height = height;
 
-        result.window_handle = CreateWindowExW(0, 
-            wtitle[0..].ptr, wtitle[0..].ptr,
-            WS_OVERLAPPEDWINDOW & ~WS_MAXIMIZEBOX & ~WS_THICKFRAME,
-            CW_USEDEFAULT, CW_USEDEFAULT, rect.right, rect.bottom,
-            null, null, result.window_class.hInstance, null
-        ) orelse return error.CreateError;
-
-        _ = ShowWindow(result.window_handle, SW_NORMAL);
-
-        result.device_context = GetDC(result.window_handle) orelse return error.CreateError;
-
-        result.keyboard = Keyboard {
-            .keys = []bool{false} ** 512
-        };
-
         return result;
+    }
+
+    pub inline fn set_title(self: *Self, title: []const u8) void {
+        const wtitle = try util.to_wstring(title);
+        _ = SetWindowTextW(self.handle, wtitle);
+    }
+
+    pub inline fn set_position(self: *Self, x: isize, y: isize) void {
+        _ = SetWindowPos(self.handle, null, c_int(x), c_int(y), 0, 0, SWP_NOSIZE | SWP_SHOWWINDOW);
+    }
+
+    pub inline fn get_keys(self: *Self, alloc: *std.mem.Allocator) !std.ArrayList {
+        return try self.keyboard.get_keys(alloc);
+    }
+
+    pub inline fn get_keys_pressed(self: *Self, alloc: *std.mem.Allocator) !std.ArrayList {
+        return try self.keyboard.get_keys_pressed(alloc);
+    }
+
+    pub inline fn is_key_down(self: *Self, key: Key) bool {
+        return self.keyboard.is_key_down(key);
+    }
+
+    pub inline fn set_key_repeat_delay(self: *Self, delay: f32) void {
+        self.keyboard.set_key_repeat_delay(delay);
+    }
+
+    pub inline fn set_key_repeat_rate(self: *Self, rate: f32) void {
+        self.keyboard.set_key_repeat_rate(rate);
+    }
+
+    pub inline fn is_key_pressed(self: *Self, key: Key, repeat: bool) bool {
+        return self.keyboard.is_key_pressed(key, repeat);
     }
 
     fn update_keyboard(self: *Self, wparam: usize, state: bool) void {
@@ -204,13 +257,15 @@ pub const Window = struct {
     }
 
     fn update_generic(self: *Self) void {
-        _ = SetWindowLongPtrW(self.window_handle, GWLP_USERDATA, @ptrToInt(self));
+        self.keyboard.update();
+
+        _ = SetWindowLongPtrW(self.handle, GWLP_USERDATA, @ptrToInt(self));
     }
 
     fn message_loop(self: *Self) void {
         var msg: MSG = undefined;
 
-        while (PeekMessageW(&msg, self.window_handle, 0, 0, PM_REMOVE) == TRUE) {
+        while (PeekMessageW(&msg, self.handle, 0, 0, PM_REMOVE) == TRUE) {
             if (msg.message == WM_QUIT) break;
             _ = TranslateMessage(&msg);
             _ = DispatchMessageW(&msg);
@@ -222,16 +277,19 @@ pub const Window = struct {
         self.message_loop();
     }
 
-    pub fn close(self: *Self) !void {
-        if (ReleaseDC(self.window_handle, self.device_context) != 1) {
-            return error.CloseError;
+    pub inline fn is_active(self: *Self) bool {
+        if (GetForegroundWindow()) |window| {
+            return window == self.handle;
         }
-        if (DestroyWindow(self.window_handle) == 0) {
-            return error.CloseError;
-        }
+        return false;
     }
 
-    pub fn is_down(self: *Self, key: Key) bool {
-        return self.keyboard.is_down(key);
+    pub fn close(self: *Self) !void {
+        if (ReleaseDC(self.handle, self.dc) != 1) {
+            return error.CloseError;
+        }
+        if (DestroyWindow(self.handle) == 0) {
+            return error.CloseError;
+        }
     }
 };

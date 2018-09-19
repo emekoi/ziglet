@@ -128,7 +128,6 @@ pub const Key = enum {
     LeftSuper,
     RightSuper,
 
-    /// Used when an Unknown key has been pressed
     Unknown,
 
     Count = 107,
@@ -137,7 +136,7 @@ pub const Key = enum {
 pub const Keyboard = struct {
     const Self = @This();
 
-    prev_time: f64,
+    prev_time: u64,
     delta_time: f32,
     keys: [512]bool,
     keys_down_duration: [512]f32,
@@ -148,8 +147,8 @@ pub const Keyboard = struct {
         return Self {
             .prev_time = 0,
             .delta_time = 0,
-            .keys = bool{false} ** 512,
-            .keys_down_duration = f32{-1.0} ** 512,
+            .keys = []bool{false} ** 512,
+            .keys_down_duration = []f32{-1.0} ** 512,
             .key_repeat_delay = 0.0,
             .key_repeat_rate = 0.0,
         };
@@ -169,15 +168,15 @@ pub const Keyboard = struct {
         return result;
     }
     
-    pub fn update(self: *Self) {
-        const current_time = time::precise_time_s();
-        const delta_time = f32(current_time - self.prev_time);
+    pub fn update(self: *Self) void {
+        const current_time = std.os.time.timestamp();
+        const delta_time = @intToFloat(f32, current_time - self.prev_time);
         self.prev_time = current_time;
         self.delta_time = delta_time;
 
         for (self.keys_down_duration) |*key, idx| {
             if (self.keys[idx]) {
-                if (*key < 0.0) {
+                if (key.* < 0.0) {
                     key.* = 0.0;
                 } else {
                     key.* += delta_time;
@@ -189,9 +188,6 @@ pub const Keyboard = struct {
     }
     
     pub fn get_keys_pressed(self: *Self, repeat: bool) !std.ArrayList(Key) {
-        let mut index: u16 = 0;
-        let mut keys: Vec<Key> = Vec::new();
-
         var result = std.ArrayList(Key).init(alloc);
         
         for (self.keys) |down, idx| {
@@ -205,11 +201,11 @@ pub const Keyboard = struct {
         return self.keys[@enumToInt(key)];
     }
 
-    pub inline fn set_key_repeat_delay(self: *Self, delay: f32) {
+    pub inline fn set_key_repeat_delay(self: *Self, delay: f32) void {
         self.key_repeat_delay = delay;
     }
 
-    pub inline fn set_key_repeat_rate(self: *Self, rate: f32) {
+    pub inline fn set_key_repeat_rate(self: *Self, rate: f32) void {
         self.key_repeat_rate = rate;
     }
 
@@ -217,11 +213,11 @@ pub const Keyboard = struct {
         const t = self.keys_down_duration[index];
 
         if (t == 0.0) return true;
-
-        if (repeat && t > self.key_repeat_delay) {
+        const comp = (t > self.key_repeat_delay);
+        if (repeat && comp.*) {
             const delay = self.key_repeat_delay;
             const rate = self.key_repeat_rate;
-            if ((((t - delay) % rate) > rate * 0.5) != (((t - delay - self.delta_time) % rate) > rate * 0.5)) {
+            if ((@rem(t - delay, rate) > rate * 0.5) != (@rem(t - delay - self.delta_time, rate) > rate * 0.5)) {
                 return true;
             }
         }
@@ -232,4 +228,16 @@ pub const Keyboard = struct {
     pub fn is_key_pressed(self: *Self, key: Key, repeat: bool) bool {
         return self.key_pressed(@enumToInt(key), repeat);
     }
+};
+
+pub const MouseButton = enum {
+    Left,
+    Middle,
+    Right,
+};
+
+pub const MouseMode = enum {
+    Pass,
+    Clamp,
+    Discard
 };

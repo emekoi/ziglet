@@ -10,14 +10,18 @@ const std = @import("std");
 use @import("ziglet");
 
 pub fn main() !void {
-    var w = Window.new("foo", 512, 512) catch |err| {
-        return err;
+    const opts = WindowOptions {
+        .borderless = false,
+        .title = true,
+        .resize = false,
     };
+
+    var w = try Window.new("foo", 512, 512, opts);
 
     while (!w.should_close) {
         w.update();
 
-        if (w.is_down(Key.Space)) {
+        if (w.is_key_pressed(Key.Space, false)) {
             std.debug.warn("space is down\n");
         }
     }

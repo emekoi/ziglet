@@ -284,12 +284,8 @@ pub const Window = struct {
         return false;
     }
 
-    pub fn close(self: *Self) !void {
-        if (ReleaseDC(self.handle, self.dc) != 1) {
-            return error.CloseError;
-        }
-        if (DestroyWindow(self.handle) == 0) {
-            return error.CloseError;
-        }
+    pub fn close(self: *Self) void {
+        _ = ReleaseDC(self.handle, self.dc);
+        _ = DestroyWindow(self.handle);
     }
 };

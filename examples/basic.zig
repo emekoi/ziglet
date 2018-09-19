@@ -17,6 +17,7 @@ pub fn main() !void {
     };
 
     var w = try Window.new("foo", 512, 512, opts);
+    defer w.close();
 
     while (!w.should_close) {
         w.update();
@@ -25,6 +26,4 @@ pub fn main() !void {
             std.debug.warn("space is down\n");
         }
     }
-
-    try w.close();
 }

@@ -213,8 +213,8 @@ pub const Keyboard = struct {
         const t = self.keys_down_duration[index];
 
         if (t == 0.0) return true;
-        const comp = (t > self.key_repeat_delay);
-        if (repeat && comp.*) {
+
+        if (repeat and (t > self.key_repeat_delay)) {
             const delay = self.key_repeat_delay;
             const rate = self.key_repeat_rate;
             if ((@rem(t - delay, rate) > rate * 0.5) != (@rem(t - delay - self.delta_time, rate) > rate * 0.5)) {

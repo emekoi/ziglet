@@ -1,4 +1,5 @@
 const std = @import("std");
+const builtin = @import("builtin");
 const Builder = std.build.Builder;
 
 pub const Executable = struct {
@@ -18,6 +19,7 @@ pub fn build(b: *Builder) !void {
         const exe = b.addExecutable(example.output, example.input);
         exe.addPackagePath("ziglet", "src/index.zig");
         exe.setBuildMode(mode);
+        exe.setTarget(builtin.Arch.x86_64, builtin.Os.windows, builtin.Environ.gnu);
         b.default_step.dependOn(&exe.step);
         b.installArtifact(exe);
     }

@@ -9,12 +9,16 @@ const super = @import("../index.zig");
 const util = @import("../util.zig");
 
 use @import("../input.zig");
-use @import("user32.zig");
+use @import("native.zig");
 
 pub const Window = struct {
     const Self = @This();
+
+    allocator: *std.mem.Allocator,
     
     handle: HWND,
+    bitmap_info: BITMAPINFO,
+    pub pixels: []u8,
     dc: HDC,
 
     keyboard: Keyboard,
@@ -43,6 +47,21 @@ pub const Window = struct {
             },
             WM_KEYUP => {
                 self.update_keyboard(lParam >> 16, false);
+            },
+            WM_PAINT => {
+                _ = StretchDIBits(
+                    self.dc, 0, 0,
+                    self.width,
+                    self.height,
+                    0, 0,
+                    self.width,
+                    self.height,
+                    &self.pixels,
+                    &self.bitmap_info,
+                    DIB_RGB_COLORS,
+                    SRCCOPY
+                );
+                _ = ValidateRect(self.handle, null);
             },
             else => {
                 return DefWindowProcW(hWnd, msg, wParam, lParam);
@@ -106,14 +125,27 @@ pub const Window = struct {
         return result;
     }
 
-    pub fn new(title: []const u8, width: i32, height: i32, opts: super.WindowOptions) !Self {
+    pub fn new(allocator: *std.mem.Allocator, title: []const u8, width: i32, height: i32, opts: super.WindowOptions) !Self {
         var result: Self = undefined;
 
-        result.handle = try Self.open_window(title, width, height, opts); 
+        result.handle = try Self.open_window(title, width, height, opts);
+        result.bitmap_info.bmiHeader.biSize = @sizeOf(BITMAPINFOHEADER);
+        result.bitmap_info.bmiHeader.biPlanes = 1;
+        result.bitmap_info.bmiHeader.biBitCount = 32;
+        result.bitmap_info.bmiHeader.biCompression = BI_BITFIELDS;
+        result.bitmap_info.bmiHeader.biWidth = width;
+        result.bitmap_info.bmiHeader.biHeight = -height;
+        result.bitmap_info.bmiColors[0].rgbRed = 0xff; 
+        result.bitmap_info.bmiColors[1].rgbGreen = 0xff; 
+        result.bitmap_info.bmiColors[2].rgbBlue = 0xff;
+
         result.dc = GetDC(result.handle) orelse return error.CreateError;
         result.keyboard = Keyboard.new();
         result.width = width;
         result.height = height;
+
+        result.pixels = try allocator.alloc(u8, @intCast(usize, width * height));
+        result.allocator = allocator;
 
         return result;
     }
@@ -274,6 +306,8 @@ pub const Window = struct {
 
     pub fn update(self: *Self) void {
         self.update_generic();
+        _ = InvalidateRect(self.handle, null, TRUE);
+        _ = SendMessageW(self.handle, WM_PAINT, 0, 0);
         self.message_loop();
     }
 
@@ -287,5 +321,7 @@ pub const Window = struct {
     pub fn close(self: *Self) void {
         _ = ReleaseDC(self.handle, self.dc);
         _ = DestroyWindow(self.handle);
+        self.allocator.free(self.pixels);
+        self.* = undefined;
     }
 };

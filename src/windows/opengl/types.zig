@@ -1,0 +1,15 @@
+pub const GLenum = u32;
+pub const GLboolean = bool;
+pub const GLbitfield = u32;
+pub const GLbyte = i8;
+pub const GLshort = i16;
+pub const GLint = i32;
+pub const GLsizei = i32;
+pub const GLubyte = u8;
+pub const GLushort = u16;
+pub const GLuint = u32;
+pub const GLfloat = f32;
+pub const GLclampf = f32;
+pub const GLdouble = f64;
+pub const GLclampd = f64;
+pub const GLvoid = *c_void;

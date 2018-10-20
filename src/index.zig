@@ -8,14 +8,6 @@ const builtin = @import("builtin");
 const Os = builtin.Os;
 const windows = @import("windows/index.zig");
 
-pub use @import("input.zig");
-
-pub const WindowOptions = struct {
-    borderless: bool,
-    title: bool,
-    resize: bool,
-};
-
 pub use switch(builtin.os) {
     Os.windows => windows,
     else => void,

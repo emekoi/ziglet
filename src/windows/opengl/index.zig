@@ -1,8 +1,15 @@
+//  Copyright (c) 2018 emekoi
+//
+//  This library is free software; you can redistribute it and/or modify it
+//  under the terms of the MIT license. See LICENSE for details.
+//
+
 use @import("../native.zig");
 use @import("types.zig");
 
 const std = @import("std");
 const util = @import("util.zig");
+const super = @import("../index.zig");
 
 const CLASS_NAME = util.L("ziglet");
 
@@ -14,11 +21,11 @@ pub const OpenGLError = error.{
 pub const Context = struct.{
     const Self = @This();
 
-    fake_hRC: HGLRC,
-    fake_hDc: HDC,
-    fake_pfd: PIXELFORMATDESCRIPTOR,
-    fake_pfdid: c_int,
-    fake_hWnd: HWND,
+    dummy_hRC: HGLRC,
+    dummy_hDc: HDC,
+    dummy_pfd: PIXELFORMATDESCRIPTOR,
+    dummy_pfdid: c_int,
+    dummy_hWnd: HWND,
 
     hRC: HGLRC,
     hDc: HDC,
@@ -29,18 +36,18 @@ pub const Context = struct.{
         return DefWindowProcW(hWnd, msg, wParam, lParam);
     }
 
-    pub fn fake_init(hInstace: HINSTANCE) !Self {
+    pub fn dummy_init(hInstace: HINSTANCE) !Self {
         var result: Self = undefined;
 
-        result.fake_hWnd = CreateWindowExW(
+        result.dummy_hWnd = CreateWindowExW(
             CLASS_NAME.ptr,CLASS_NAME.ptr,
             WS_CLIPCHILDREN | WS_CLIPSIBLINGS,
             0, 0, 1, 1, null, null, hInstace, null
         ) orelse return error.InitError;
 
-        result.fake_hDc = GetDC(fake_wnd);
+        result.dummy_hDc = GetDC(dummy_wnd);
         
-        result.fake_pfd = PIXELFORMATDESCRIPTOR.{
+        result.dummy_pfd = PIXELFORMATDESCRIPTOR.{
             .nSize =@sizeOf(PIXELFORMATDESCRIPTOR),
             .nVersion = 1,
             .dwFlags = PFD_DOUBLEBUFFER | PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL,
@@ -69,41 +76,50 @@ pub const Context = struct.{
             .dwDamageMask = 0,
         };
         
-        result.fake_pfdid = ChoosePixelFormat(result.fake_hDc, &result.fake_pfd);
+        result.dummy_pfdid = ChoosePixelFormat(result.dummy_hDc, &result.dummy_pfd);
 
-        if (result.fake_pfdid == 0) {
+        if (result.dummy_pfdid == 0) {
             return error.InitError;
         }
 
-        if (SetPixelFormat(result.fake_hDc, result.fake_hDc, &result.fake_pfd) == FALSE) {
+        if (SetPixelFormat(result.dummy_hDc, result.dummy_hDc, &result.dummy_pfd) == FALSE) {
             return error.InitError;   
         }
 
-        result.fake_hRc = wglCreateContext(result.fake_hDc);
-        if (fakeresult.fake_hRc == 0) {
+        result.dummy_hRc = wglCreateContext(result.dummy_hDc);
+        if (dummyresult.dummy_hRc == 0) {
             return error.InitError;   
         }
 
-        if (wglMakeCurrent(result.fake_hDc, result.fake_hRc) == FALSE) {
+        if (wglMakeCurrent(result.dummy_hDc, result.dummy_hRc) == FALSE) {
+            return error.InitError;
+        }
+
+        return result;
+    }
+
+    fn dummy_deinit(self: Self) !void {
+        if (wglMakeCurrent(null, null) == FALSE) {
+            return error.InitError;
+        }
+        if (wglDeleteContext(self.dummy_hRC)) {
+            return error.InitError;
+        }
+        if (ReleaseDC(self.dummy_hWnd, self.dummy_hDc) == FALSE) {
+            return error.InitError;
+        }
+        if (DestroyWindow(self.dummy_hWnd) == FALSE) {
             return error.InitError;
         }
     }
 
-    pub fn fake_deinit(self: Self) !void {
-        if (wglMakeCurrent(null, null) == FALSE) {
-            return error.ShutdownError;
-        }
-        if (wglDeleteContext(self.fake_hRC)) {
-            return error.ShutdownError;
-        }
-        if (ReleaseDC(self.fake_hWnd, self.fake_hDc) == FALSE) {
-            return error.ShutdownError;
-        }
-        if (DestroyWindow(self.fake_hWnd) == FALSE) {
-            return error.ShutdownError;
-        }
-        if (UnregisterClassW(CLASS_NAME.ptr, self.hInstace)) {
-            return error.ShutdownError;
+    pub fn init(self: *Self, window: *super.Window) !void { 
+        self.hWnd = window.handle;
+        
+        self.dummy_deinit();
+
+        if (wglMakeCurrent(result.hDc, result.hRc) == FALSE) {
+            return error.InitError;
         }
     }
 

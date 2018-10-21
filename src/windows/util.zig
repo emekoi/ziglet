@@ -1,3 +1,9 @@
+//  Copyright (c) 2018 emekoi
+//
+//  This library is free software; you can redistribute it and/or modify it
+//  under the terms of the MIT license. See LICENSE for details.
+//
+
 const std = @import("std");
 
 pub fn L(comptime str: []const u8) ![]u16 {

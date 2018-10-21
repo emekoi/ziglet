@@ -319,6 +319,13 @@ pub extern "user32" stdcallcc fn ValidateRect(hWnd: HWND, lpRect: ?*const RECT) 
 
 pub extern "user32" stdcallcc fn InvalidateRect(hWnd: HWND, lpRect: ?*const RECT, bErase: BOOL) BOOL;
 
+pub extern "user32" stdcallcc fn ChangeDisplaySettingsW(lpDevMode: ?*DEVMODEW, dwFlags: DWORD) LONG;
+
+pub extern "user32" stdcallcc fn ShowCursor(bShow: BOOL) c_int;
+
+pub extern "user32" stdcallcc fn AdjustWindowRectEx(lpRect: LPRECT, dwStyle: DWORD, bMenu: BOOL, dwExStyle: DWORD) BOOL;
+
+
 pub extern "gdi32" stdcallcc fn StretchDIBits(hdc: HDC, xDest: c_int, yDest: c_int, DestWidth: c_int, DestHeight: c_int,
                     xSrc: c_int, ySrc: c_int, SrcWidth: c_int, SrcHeight: c_int, lpBits: ?*const c_void,
                     lpbmi: ?*const BITMAPINFO, iUsage: UINT, rop: DWORD) c_int;
@@ -327,14 +334,13 @@ pub extern "gdi32" stdcallcc fn ChoosePixelFormat(hdc: HDC, ppfd: ?*const PIXELF
 
 pub extern "gdi32" stdcallcc fn SetPixelFormat(hdc: HDC, format: c_int, ppfd: ?*const PIXELFORMATDESCRIPTOR) BOOL;
 
+
 pub extern "opengl32" stdcallcc fn wglCreateContext(arg0: HDC) HGLRC;
 
 pub extern "opengl32" stdcallcc fn wglMakeCurrent(arg0: HDC, arg1: HGLRC) BOOL;
 
 pub extern "opengl32" stdcallcc fn wglDeleteContext(arg0: HGLRC) BOOL;
 
-pub extern "user32" stdcallcc fn ChangeDisplaySettingsW(lpDevMode: ?*DEVMODEW, dwFlags: DWORD) LONG;
+pub extern "opengl32" stdcallcc fn wglGetProcAddress(LPCSTR) PROC;
 
-pub extern "user32" stdcallcc fn ShowCursor(bShow: BOOL) c_int;
 
-pub extern "user32" stdcallcc fn AdjustWindowRectEx(lpRect: LPRECT, dwStyle: DWORD, bMenu: BOOL, dwExStyle: DWORD) BOOL;

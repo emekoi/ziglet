@@ -6,6 +6,24 @@ a small zig game library.
 * native: no dependencies at all
 
 ## TODO
-* [ ] work on windows
-* [ ] work on mac
-* [ ] work on linux
+### windows
+* [ ] windowing
+* [ ] opengl graphics
+* [ ] directx graphics?
+* [ ] keyboard input
+* [ ] mouse input
+* [ ] drawing abstractions (textures, shapes, etc.)
+### mac
+* [ ] windowing
+* [ ] opengl graphics
+* [ ] metal graphics?
+* [ ] keyboard input
+* [ ] mouse input
+* [ ] drawing abstractions (textures, shapes, etc.)
+### linux
+* [ ] windowing
+* [ ] opengl graphics
+* [ ] directx graphics?
+* [ ] keyboard input
+* [ ] mouse input
+* [ ] drawing abstractions (textures, shapes, etc.)

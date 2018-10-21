@@ -28,6 +28,8 @@ pub const HDC = HANDLE;
 
 pub const HGLRC = HANDLE;
 
+pub const PROC = *@OpaqueType();
+
 pub const LPARAM = LONG_PTR;
 
 pub const WPARAM = LONG_PTR;
@@ -335,12 +337,12 @@ pub extern "gdi32" stdcallcc fn ChoosePixelFormat(hdc: HDC, ppfd: ?*const PIXELF
 pub extern "gdi32" stdcallcc fn SetPixelFormat(hdc: HDC, format: c_int, ppfd: ?*const PIXELFORMATDESCRIPTOR) BOOL;
 
 
-pub extern "opengl32" stdcallcc fn wglCreateContext(arg0: HDC) HGLRC;
+pub extern "opengl32" stdcallcc fn wglCreateContext(arg0: HDC) ?HGLRC;
 
 pub extern "opengl32" stdcallcc fn wglMakeCurrent(arg0: HDC, arg1: HGLRC) BOOL;
 
 pub extern "opengl32" stdcallcc fn wglDeleteContext(arg0: HGLRC) BOOL;
 
-pub extern "opengl32" stdcallcc fn wglGetProcAddress(LPCSTR) PROC;
+pub extern "opengl32" stdcallcc fn wglGetProcAddress(LPCSTR) ?PROC;
 
 

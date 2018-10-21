@@ -86,10 +86,9 @@ pub const Context = struct.{
             return error.InitError;   
         }
 
-        result.dummy_hRc = wglCreateContext(result.dummy_hDc);
-        if (dummyresult.dummy_hRc == 0) {
-            return error.InitError;   
-        }
+        if (wglCreateContext(result.dummy_hDc)) |hRc| {
+            result.dummy_hRc = hRc;
+        } else return error.InitError;
 
         if (wglMakeCurrent(result.dummy_hDc, result.dummy_hRc) == FALSE) {
             return error.InitError;

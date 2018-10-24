@@ -7,32 +7,22 @@
 // zig build-exe examples/basic.zig --pkg-begin ziglet src/index.zig --pkg-end
 
 const std = @import("std");
-// const heap = std.heap;
-// const mem = std.mem;
-use @import("ziglet");
-
-// pub var global: *mem.Allocator = undefined;
-// var alloc_impl: heap.DirectAllocator = undefined;
+const ziglet = @import("ziglet");
 
 pub fn main() !void {
-    // alloc_impl = heap.DirectAllocator.init();
-    // global = &alloc_impl.allocator;
-    // defer alloc_impl.deinit();
+    const opts = ziglet.app.Window.Options.{
+        .fullscreen = false,
+        .borderless = false,
+        .resizeable = false,
+        .width = 512,
+        .height = 512,
+        .title = "hello world",
+    };
 
-    // const opts = WindowOptions {
-    //     .borderless = false,
-    //     .title = true,
-    //     .resize = false,
-    // };
+    var w = try ziglet.app.Window.init(opts);
+    defer w.deinit();
 
-    // var w = try Window.new(global, "foo", 512, 512, opts);
-    // defer w.close();
-
-    // while (!w.should_close) {
-    //     w.update();
-
-    //     if (w.is_key_pressed(Key.Space, false)) {
-    //         std.debug.warn("space is down\n");
-    //     }
-    // }
+    while (!w.should_close) {
+         w.update();
+    }
 }

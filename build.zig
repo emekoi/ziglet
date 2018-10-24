@@ -8,7 +8,7 @@ pub const Executable = struct.{
 };
 
 const examples = []Executable.{
-    Executable0.{ .output = "../bin/basic", .input = "examples/basic.zig"},
+    Executable.{ .output = "../bin/basic", .input = "examples/basic.zig"},
 };
 
 pub fn build(b: *Builder) !void {

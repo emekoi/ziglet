@@ -6,6 +6,7 @@
 
 const std = @import("std");
 
+use std.os.windows;
 pub use std.os.windows;
 
 pub const ATOM = i16;
@@ -35,14 +36,6 @@ pub const LPARAM = LONG_PTR;
 pub const WPARAM = LONG_PTR;
 
 pub const LRESULT = LONG_PTR;
-
-pub const TMSG = MSG;
-
-pub const LPWNDCLASS = *WNDCLASS;
-
-pub const LPRECT = *RECT;
-
-pub const LPMSG = *MSG;
 
 pub const MAKEINTRESOURCE = [*]WCHAR;
 
@@ -130,18 +123,18 @@ pub const CDS_FULLSCREEN = 4;
 
 pub const WNDPROC = stdcallcc fn(HWND, UINT, WPARAM, LPARAM) LRESULT;
   
-pub const WNDCLASS = extern struct.{
-    style: UINT,
-    lpfnWndProc: ?WNDPROC,
-    cbClsExtra: c_int,
-    cbWndExtra: c_int,
-    hInstance: HINSTANCE,
-    hIcon: HICON,
-    hCursor: HCURSOR,
-    hbrBackground: HBRUSH,
-    lpszMenuName: [*]const WCHAR,
-    lpszClassName: [*]const WCHAR,
-};
+// pub const WNDCLASS = extern struct.{
+//     style: UINT,
+//     lpfnWndProc: ?WNDPROC,
+//     cbClsExtra: c_int,
+//     cbWndExtra: c_int,
+//     hInstance: HINSTANCE,
+//     hIcon: HICON,
+//     hCursor: HCURSOR,
+//     hbrBackground: HBRUSH,
+//     lpszMenuName: [*]const WCHAR,
+//     lpszClassName: [*]const WCHAR,
+// };
 
 pub const WNDCLASSEX = extern struct.{
     cbSize: UINT,
@@ -149,13 +142,13 @@ pub const WNDCLASSEX = extern struct.{
     lpfnWndProc: ?WNDPROC,
     cbClsExtra: c_int,
     cbWndExtra: c_int,
-    hInstance: HINSTANCE,
-    hIcon: HICON,
-    hCursor: HCURSOR,
-    hbrBackground: HBRUSH,
-    lpszMenuName: [*]const WCHAR,
+    hInstance: HMODULE,
+    hIcon: ?HICON,
+    hCursor: ?HCURSOR,
+    hbrBackground: ?HBRUSH,
+    lpszMenuName: ?[*]const WCHAR,
     lpszClassName: [*]const WCHAR,
-    hIconSm: HICON,
+    hIconSm: ?HICON,
 };
 
 pub const RECT = extern struct.{
@@ -273,18 +266,18 @@ pub const DEVMODEW = extern struct.{
 
 pub extern "user32" stdcallcc fn LoadCursorW(hInstance: ?HINSTANCE, lpCursorName: LPCWSTR) ?HCURSOR;
 
-pub extern "user32" stdcallcc fn LoadIconW(hInstance: HINSTANCE, lpIconName: LPCWSTR) ?HICON;
+pub extern "user32" stdcallcc fn LoadIconW(hInstance: ?HINSTANCE, lpIconName: LPCWSTR) ?HICON;
 
-pub extern "user32" stdcallcc fn RegisterClassW(lpWndClass: LPWNDCLASS) ATOM;
+pub extern "user32" stdcallcc fn RegisterClassExW(lpWndClassEx: *const WNDCLASSEX) ATOM;
 
-pub extern "user32" stdcallcc fn UnregisterClassW(lpClassName: LPCWSTR, hInstance: HINSTANCE) BOOL;
+pub extern "user32" stdcallcc fn UnregisterClassW(lpClassName: LPCWSTR, hInstance: HMODULE) BOOL;
 
-pub extern "user32" stdcallcc fn AdjustWindowRect(lpRect: LPRECT, dwStyle: DWORD, bMenu: BOOL) BOOL;
+pub extern "user32" stdcallcc fn AdjustWindowRect(lpRect: *RECT, dwStyle: DWORD, bMenu: BOOL) BOOL;
 
 pub extern "user32" stdcallcc fn CreateWindowExW(dwExStyle: DWORD, lpClassName: LPCWSTR,
                     lpWindowName: LPCWSTR, dwStyle: DWORD, X: c_int,
                     Y: c_int, nWidth: c_int, nHeight: c_int,
-                    hWndParent: ?HWND, menu: ?HMENU, hInstance: ?HINSTANCE,
+                    hWndParent: ?HWND, menu: ?HMENU, hInstance: ?HMODULE,
                     lpParam: ?LPVOID) ?HWND;
 
 pub extern "user32" stdcallcc fn DestroyWindow(wnd: HWND) BOOL;
@@ -295,14 +288,14 @@ pub extern "user32" stdcallcc fn GetDC(wnd: HWND) ?HDC;
 
 pub extern "user32" stdcallcc fn ReleaseDC(wnd: HWND, hDC: HDC) c_int;
 
-pub extern "user32" stdcallcc fn PeekMessageW(lpMsg: *TMSG, wnd: HWND, wMsgFilterMin: UINT,
+pub extern "user32" stdcallcc fn PeekMessageW(lpMsg: *MSG, wnd: HWND, wMsgFilterMin: UINT,
                     wMsgFilterMax: UINT, wRemoveMsg: UINT) BOOL;
 
 pub extern "user32" stdcallcc fn SendMessageW(hWnd: HWND, Msg: UINT, wParam: WPARAM, lParam: LPARAM) LRESULT;
 
-pub extern "user32" stdcallcc fn TranslateMessage(lpMsg: LPMSG) BOOL;
+pub extern "user32" stdcallcc fn TranslateMessage(lpMsg: *MSG) BOOL;
 
-pub extern "user32" stdcallcc fn DispatchMessageW(lpMsg: LPMSG) LONG;
+pub extern "user32" stdcallcc fn DispatchMessageW(lpMsg: *MSG) LONG;
 
 pub extern "user32" stdcallcc fn DefWindowProcW(wnd: HWND, msg: UINT, wp: WPARAM, lp: LPARAM) LRESULT;
 
@@ -325,7 +318,7 @@ pub extern "user32" stdcallcc fn ChangeDisplaySettingsW(lpDevMode: ?*DEVMODEW, d
 
 pub extern "user32" stdcallcc fn ShowCursor(bShow: BOOL) c_int;
 
-pub extern "user32" stdcallcc fn AdjustWindowRectEx(lpRect: LPRECT, dwStyle: DWORD, bMenu: BOOL, dwExStyle: DWORD) BOOL;
+pub extern "user32" stdcallcc fn AdjustWindowRectEx(lpRect: *RECT, dwStyle: DWORD, bMenu: BOOL, dwExStyle: DWORD) BOOL;
 
 
 pub extern "gdi32" stdcallcc fn StretchDIBits(hdc: HDC, xDest: c_int, yDest: c_int, DestWidth: c_int, DestHeight: c_int,

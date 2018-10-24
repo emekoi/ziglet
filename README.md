@@ -9,7 +9,7 @@ a small zig game library.
 ### windows
 * [ ] windowing
 * [ ] opengl graphics
-* [ ] directx graphics?
+* [ ] directx graphics
 * [ ] keyboard input
 * [ ] mouse input
 * [ ] drawing abstractions (textures, shapes, etc.)

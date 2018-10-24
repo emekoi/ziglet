@@ -4,16 +4,7 @@
 //  under the terms of the MIT license. See LICENSE for details.
 //
 
-const builtin = @import("builtin");
-const Os = builtin.Os;
-const windows = @import("windows/index.zig");
-
-pub const keyboard = @import("keyboard.zig");
-
-pub use switch(builtin.os) {
-    Os.windows => windows,
-    else => void,
-};
+pub const app = @import("app/index.zig");
 
 
 

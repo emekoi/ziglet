@@ -4,14 +4,10 @@
 //  under the terms of the MIT license. See LICENSE for details.
 //
 
-use @import("../native.zig");
+use @import("native.zig");
 use @import("types.zig");
 
 const std = @import("std");
-const util = @import("util.zig");
-const super = @import("../index.zig");
-
-const CLASS_NAME = util.L("ziglet");
 
 pub const OpenGLError = error.{
     InitError,
@@ -112,12 +108,12 @@ pub const Context = struct.{
         }
     }
 
-    pub fn init(self: *Self, window: *super.Window) !void { 
-        self.hWnd = window.handle;
+    pub fn init(self: *Self, window: HWND) !void { 
+        self.hWnd = window;
         
         self.dummy_deinit();
 
-        if (wglMakeCurrent(result.hDc, result.hRc) == FALSE) {
+        if (wglMakeCurrent(self.hDc, self.hRc) == FALSE) {
             return error.InitError;
         }
     }

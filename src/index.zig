@@ -5,6 +5,3 @@
 //
 
 pub const app = @import("app/index.zig");
-
-
-

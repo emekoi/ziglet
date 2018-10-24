@@ -8,9 +8,12 @@
 
 const std = @import("std");
 const ziglet = @import("ziglet");
+const Window = ziglet.app.Window;
+const RenderBackend = ziglet.app.RenderBackend;
 
 pub fn main() !void {
-    const opts = ziglet.app.Window.Options.{
+    const opts = Window.Options.{
+        .backend = RenderBackend.OpenGL,
         .fullscreen = false,
         .borderless = false,
         .resizeable = false,
@@ -19,7 +22,7 @@ pub fn main() !void {
         .title = "hello world",
     };
 
-    var w = try ziglet.app.Window.init(opts);
+    var w = try Window.init(opts);
     defer w.deinit();
 
     while (!w.should_close) {

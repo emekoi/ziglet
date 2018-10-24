@@ -8,6 +8,7 @@ use @import("native.zig");
 
 const std = @import("std");
 const util = @import("util.zig");
+const super = @import("../index.zig");
 
 pub const Window = struct.{
     const Self = @This();
@@ -18,6 +19,7 @@ pub const Window = struct.{
     };
 
     pub const Options = struct.{
+        backend: super.RenderBackend,
         fullscreen: bool,
         borderless: bool,
         resizeable: bool,
@@ -90,7 +92,7 @@ pub const Window = struct.{
         };
 
         var dwExStyle: u32 = 0;
-        var dwStyle: u32 = WS_CLIPSIBLINGS | WS_CLIPCHILDREN;     
+        var dwStyle: u32 = WS_CLIPSIBLINGS | WS_CLIPCHILDREN;
 
         if (options.fullscreen) {
             var dmScreenSettings: DEVMODEW = undefined;
@@ -132,7 +134,7 @@ pub const Window = struct.{
         rect.right -= rect.left;
         rect.bottom -= rect.top;
 
-        return CreateWindowExW(dwExStyle, 
+        return CreateWindowExW(dwExStyle,
             wtitle.ptr, wtitle.ptr, dwStyle,
             CW_USEDEFAULT, CW_USEDEFAULT, rect.right, rect.bottom,
             null, null, wcex.hInstance, null

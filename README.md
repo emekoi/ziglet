@@ -8,22 +8,21 @@ a small zig game library.
 ## TODO
 ### windows
 * [ ] windowing
-* [ ] opengl graphics
-* [ ] directx graphics
+* [ ] opengl backend
+* [ ] directx backend
 * [ ] keyboard input
 * [ ] mouse input
 * [ ] drawing abstractions (textures, shapes, etc.)
 ### mac
 * [ ] windowing
-* [ ] opengl graphics
-* [ ] metal graphics?
+* [ ] opengl backend
+* [ ] metal backend
 * [ ] keyboard input
 * [ ] mouse input
 * [ ] drawing abstractions (textures, shapes, etc.)
 ### linux
 * [ ] windowing
-* [ ] opengl graphics
-* [ ] directx graphics?
+* [ ] opengl backend
 * [ ] keyboard input
 * [ ] mouse input
 * [ ] drawing abstractions (textures, shapes, etc.)

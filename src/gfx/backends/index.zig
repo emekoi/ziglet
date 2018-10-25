@@ -7,12 +7,12 @@
 const builtin = @import("builtin");
 const Os = builtin.Os;
 
-pub const RenderBackend = enum.{
-    DirectX11,
-    OpenGL,
+pub const dx11 = switch (builtin.os) {
+    Os.windows => @import("dx11/index.zig"),
+    else => void,
 };
 
-pub use switch (builtin.os) {
-    Os.windows => @import("windows/index.zig"),
-    else => @compileError("unsupported os"),
+pub const gl = switch (builtin.os) {
+    Os.windows => @import("gl/index.zig"),
+    else => void,
 };

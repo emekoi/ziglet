@@ -13,7 +13,7 @@ const super = @import("../index.zig");
 pub const Window = struct.{
     const Self = @This();
 
-    pub const WindowError = error.{
+    pub const Error = error.{
         InitError,
         ShutdownError,
     };
@@ -62,7 +62,7 @@ pub const Window = struct.{
         return result;
     }
 
-    fn open_window(options: Options) WindowError!HWND {
+    fn open_window(options: Options) Error!HWND {
         const wtitle = util.L(options.title);
 
         const wcex = WNDCLASSEX.{

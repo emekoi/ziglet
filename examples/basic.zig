@@ -26,7 +26,12 @@ pub fn main() !void {
     var w = try Window.init(opts);
     defer w.deinit();
 
+    std.debug.warn("basic: {}\n", @ptrToInt(&w));
+
     while (!w.should_close) {
-         w.update();
+        w.update();
+        if (w.should_close) {
+            std.debug.warn("shutdown!\n");
+        }
     }
 }

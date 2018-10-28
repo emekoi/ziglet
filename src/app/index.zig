@@ -7,6 +7,8 @@
 const builtin = @import("builtin");
 const Os = builtin.Os;
 
+const keyboard = @import("keyboard.zig");
+
 pub const RenderBackend = enum.{
     DirectX11,
     OpenGL,
@@ -16,3 +18,7 @@ pub use switch (builtin.os) {
     Os.windows => @import("windows/index.zig"),
     else => @compileError("unsupported os"),
 };
+
+
+pub const Key = keyboard.Key;
+pub const Keyboard = keyboard.Keyboard;

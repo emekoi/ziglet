@@ -122,19 +122,6 @@ pub const DM_BITSPERPEL = 0x00040000;
 pub const CDS_FULLSCREEN = 4;
 
 pub const WNDPROC = stdcallcc fn(HWND, UINT, WPARAM, LPARAM) LRESULT;
-  
-// pub const WNDCLASS = extern struct.{
-//     style: UINT,
-//     lpfnWndProc: ?WNDPROC,
-//     cbClsExtra: c_int,
-//     cbWndExtra: c_int,
-//     hInstance: HINSTANCE,
-//     hIcon: HICON,
-//     hCursor: HCURSOR,
-//     hbrBackground: HBRUSH,
-//     lpszMenuName: [*]const WCHAR,
-//     lpszClassName: [*]const WCHAR,
-// };
 
 pub const WNDCLASSEX = extern struct.{
     cbSize: UINT,
@@ -305,14 +292,14 @@ pub extern "user32" stdcallcc fn SetWindowLongPtrW(hWnd: HWND, nIndex: c_int, dw
 
 pub extern "user32" stdcallcc fn SetWindowTextW(hWnd: HWND, lpString: LPCWSTR) BOOL;
 
-pub extern "user32" stdcallcc fn SetWindowPos(hWnd: HWND, hWndInsertAfter: ?HWND,
-                    X: c_int, Y: c_int, cx: c_int, cy: c_int, uFlags: UINT) BOOL;
+// pub extern "user32" stdcallcc fn SetWindowPos(hWnd: HWND, hWndInsertAfter: ?HWND,
+//                     X: c_int, Y: c_int, cx: c_int, cy: c_int, uFlags: UINT) BOOL;
 
-pub extern "user32" stdcallcc fn GetForegroundWindow() ?HWND;
+// pub extern "user32" stdcallcc fn GetForegroundWindow() ?HWND;
 
-pub extern "user32" stdcallcc fn ValidateRect(hWnd: HWND, lpRect: ?*const RECT) BOOL;
+// pub extern "user32" stdcallcc fn ValidateRect(hWnd: HWND, lpRect: ?*const RECT) BOOL;
 
-pub extern "user32" stdcallcc fn InvalidateRect(hWnd: HWND, lpRect: ?*const RECT, bErase: BOOL) BOOL;
+// pub extern "user32" stdcallcc fn InvalidateRect(hWnd: HWND, lpRect: ?*const RECT, bErase: BOOL) BOOL;
 
 pub extern "user32" stdcallcc fn ChangeDisplaySettingsW(lpDevMode: ?*DEVMODEW, dwFlags: DWORD) LONG;
 

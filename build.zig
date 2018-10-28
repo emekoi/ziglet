@@ -19,7 +19,7 @@ pub fn build(b: *Builder) !void {
         const exe = b.addExecutable(example.output, example.input);
         exe.addPackagePath("ziglet", "src/index.zig");
         exe.setBuildMode(mode);
-        exe.setTarget(builtin.Arch.x86_64, builtin.Os.windows, builtin.Environ.gnu);
+        exe.setTarget(builtin.arch, builtin.os, builtin.environ);
         b.default_step.dependOn(&exe.step);
         b.installArtifact(exe);
     }

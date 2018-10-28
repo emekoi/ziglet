@@ -13,6 +13,11 @@ pub const dx11 = switch (builtin.os) {
 };
 
 pub const gl = switch (builtin.os) {
-    Os.windows => @import("gl/index.zig"),
+    Os.windows, Os.linux, Os.macosx => @import("gl/index.zig"),
+    else => void,
+};
+
+pub const metal = switch (builtin.os) {
+    Os.macosx => @import("metal/index.zig"),
     else => void,
 };

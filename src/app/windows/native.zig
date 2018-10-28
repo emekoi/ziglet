@@ -9,7 +9,7 @@ const std = @import("std");
 use std.os.windows;
 pub use std.os.windows;
 
-pub const ATOM = i16;
+pub const ATOM = u16;
 
 pub const LONG = c_int;
 

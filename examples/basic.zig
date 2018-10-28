@@ -8,6 +8,7 @@
 
 const std = @import("std");
 const ziglet = @import("ziglet");
+
 const Window = ziglet.app.Window;
 const RenderBackend = ziglet.app.RenderBackend;
 
@@ -19,7 +20,7 @@ pub fn main() !void {
         .resizeable = false,
         .width = 512,
         .height = 512,
-        .title = "hello world",
+        .title = "hello_world",
     };
 
     var w = try Window.init(opts);

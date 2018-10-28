@@ -42,7 +42,9 @@ pub const Window = struct.{
     stdcallcc fn wnd_proc(hWnd: HWND, msg: UINT, wParam: WPARAM, lParam: LPARAM) LRESULT {
         var result: LRESULT = 0;
 
-        var self = @intToPtr(?*Self, GetWindowLongPtrW(hWnd, GWLP_USERDATA)) orelse return DefWindowProcW(hWnd, msg, wParam, lParam);
+        var self = @intToPtr(?*Self, GetWindowLongPtrW(hWnd, GWLP_USERDATA)) orelse {
+            return DefWindowProcW(hWnd, msg, wParam, lParam);
+        };
 
         switch (msg) {
             WM_CLOSE => {
@@ -110,10 +112,7 @@ pub const Window = struct.{
             }
         } else {
             dwExStyle = WS_EX_APPWINDOW | WS_EX_WINDOWEDGE | WS_EX_ACCEPTFILES;
-
-            if (options.title.len > 0) {
-                dwStyle |= DWORD(WS_OVERLAPPEDWINDOW);
-            }
+            dwStyle |= DWORD(WS_OVERLAPPEDWINDOW);
 
             if (options.resizeable) {
                 dwStyle |= DWORD(WS_THICKFRAME) | DWORD(WS_MAXIMIZEBOX);

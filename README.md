@@ -23,6 +23,7 @@ a small zig game library.
 ### linux
 * [ ] windowing
 * [ ] opengl backend
+* [ ] vulkan backend? (probably not)
 * [ ] keyboard input
 * [ ] mouse input
 * [ ] drawing abstractions (textures, shapes, etc.)

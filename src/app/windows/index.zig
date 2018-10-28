@@ -65,7 +65,7 @@ pub const Window = struct.{
     }
 
     fn open_window(options: Options) Error!HWND {
-        const wtitle = util.L(options.title);
+        const wtitle = util.L(options.title)[0..(options.title.len + 1)];
 
         const wcex = WNDCLASSEX.{
             .cbSize = @sizeOf(WNDCLASSEX),
@@ -167,7 +167,7 @@ pub const Window = struct.{
             _ = ChangeDisplaySettingsW(null, 0);
             _ = ShowCursor(TRUE);
         }
-        _ = UnregisterClassW(util.L(self.title).ptr, GetModuleHandleW(null));
+        _ = UnregisterClassW(util.L(self.title)[0..].ptr, GetModuleHandleW(null));
     }
 
     fn update_keyboard(self: *Self, wparam: usize, state: bool) void {

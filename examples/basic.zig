@@ -9,6 +9,7 @@
 const std = @import("std");
 const ziglet = @import("ziglet");
 
+const Key = ziglet.app.Key;
 const Window = ziglet.app.Window;
 const RenderBackend = ziglet.app.RenderBackend;
 
@@ -26,12 +27,11 @@ pub fn main() !void {
     var w = try Window.init(opts);
     defer w.deinit();
 
-    std.debug.warn("basic: {}\n", @ptrToInt(&w));
-
     while (!w.should_close) {
         w.update();
-        if (w.should_close) {
-            std.debug.warn("shutdown!\n");
+
+        if (w.keyboard.was_pressed(Key.Escape, false)) {
+            w.should_close = true;
         }
     }
 }

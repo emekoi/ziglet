@@ -177,11 +177,11 @@ pub const Keyboard = struct.{
         self.keys[@enumToInt(key)] = state;
     }
 
-    pub fn is_key_down(self: *Self, key: Key) bool {
+    pub fn is_down(self: *Self, key: Key) bool {
         return self.keys[@enumToInt(key)];
     }
 
-    pub fn get_keys_down(self: *Self, alloc: *std.mem.Allocator) !std.ArrayList(Key) {
+    pub fn keys_down(self: *Self, alloc: *std.mem.Allocator) !std.ArrayList(Key) {
         var result = std.ArrayList(Key).init(alloc);
         
         for (self.keys) |down, idx| {
@@ -194,7 +194,7 @@ pub const Keyboard = struct.{
         return result;
     }
 
-    pub fn is_key_pressed(self: *Self, key: Key, repeat: bool) bool {
+    pub fn was_pressed(self: *Self, key: Key, repeat: bool) bool {
         const t = self.keys_down_duration[@enumToInt(key)];
 
         if (t == 0.0) return true;
@@ -210,12 +210,12 @@ pub const Keyboard = struct.{
         return false;
     }
 
-    pub fn get_keys_pressed(self: *Self, alloc: *std.mem.Allocator, repeat: bool) !std.ArrayList(Key) {
+    pub fn keys_pressed(self: *Self, alloc: *std.mem.Allocator, repeat: bool) !std.ArrayList(Key) {
         var result = std.ArrayList(Key).init(alloc);
         
         for (self.keys) |down, idx| {
             const e = @truncate(u7, idx);
-            if (self.is_key_pressed(@intToEnum(Key, e), repeat)) {
+            if (self.was_pressed(@intToEnum(Key, e), repeat)) {
                 try result.append(@intToEnum(Key, e));
             }
         }

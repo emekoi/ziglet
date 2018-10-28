@@ -50,7 +50,6 @@ pub const Window = struct.{
 
         switch (msg) {
             WM_CLOSE, WM_DESTROY, WM_QUIT => {
-                std.debug.warn("cisab: {}\n", @ptrToInt(self));
                 self.should_close = true;
             },
             WM_KEYDOWN => {
@@ -160,10 +159,7 @@ pub const Window = struct.{
 
         result.handle = try open_window(options);
         _ = ShowWindow(result.handle, SW_NORMAL);
-        _ = SetWindowLongPtrW(result.handle, GWLP_USERDATA, @ptrToInt(&result));
-
-        result.fullscreen = true;
-        std.debug.warn("creat: {}\n", @ptrToInt(&result));
+        
         return result;
     }
 
@@ -291,14 +287,10 @@ pub const Window = struct.{
     }
 
     pub fn update(self: *Self) void {
-        if (self.fullscreen) {
-            std.debug.warn("debug: {}\n", @ptrToInt(&self));
-            self.fullscreen = false;
-        }
+        _ = SetWindowLongPtrW(self.handle, GWLP_USERDATA, @ptrToInt(self));
 
         self.keyboard.update();
         self.message_loop();
-        // std.debug.warn("kill who?");
     }
 
     pub fn get_fullscreen(self: *const Self) bool {

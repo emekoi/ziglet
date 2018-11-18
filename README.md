@@ -1,6 +1,6 @@
 # ziglet
 
-a small zig game library.
+a small zig game library inspired by [sokol](https://github.com/floooh/sokol).
 
 ## features
 * native: no dependencies at all

@@ -8,6 +8,8 @@ const builtin = @import("builtin");
 const Os = builtin.Os;
 
 const keyboard = @import("keyboard.zig");
+const mouse = @import("mouse.zig");
+const event = @import("event.zig");
 
 pub const RenderBackend = enum.{
     DirectX11,
@@ -19,6 +21,7 @@ pub use switch (builtin.os) {
     else => @compileError("unsupported os"),
 };
 
-
 pub const Key = keyboard.Key;
 pub const Keyboard = keyboard.Keyboard;
+
+pub const MouseButton = mouse.MouseButton;

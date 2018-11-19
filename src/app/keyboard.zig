@@ -8,8 +8,7 @@ const std = @import("std");
 
 const mem = std.mem;
 
-pub const Key = enum.{
-    Invalid          = 0,
+pub const Key = enum(u9) {
     Space            = 32,
     Apostrophe       = 39,
     Comma            = 44,
@@ -57,7 +56,7 @@ pub const Key = enum.{
     LeftBracket      = 91,
     Backslash        = 92,
     RightBracket     = 93,
-    GraveAccent      = 96,
+    Backquote        = 96,
     World1           = 161,
     World2           = 162,
     Escape           = 256,
@@ -132,7 +131,7 @@ pub const Key = enum.{
     Menu             = 348,
 };
 
-pub const Keyboard = struct.{
+pub const Keyboard = struct {
     const Self = @This();
 
     prev_time: u64,
@@ -143,11 +142,11 @@ pub const Keyboard = struct.{
     key_repeat_rate: f32,
     
     pub fn new() Self {
-        return Self.{
+        return Self {
             .prev_time = 0,
             .delta_time = 0,
-            .keys = []bool.{false} ** 512,
-            .keys_down_duration = []f32.{-1.0} ** 512,
+            .keys = []bool {false} ** 512,
+            .keys_down_duration = []f32 {-1.0} ** 512,
             .key_repeat_delay = 0.0,
             .key_repeat_rate = 0.0,
         };

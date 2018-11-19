@@ -12,8 +12,8 @@ pub const dx11 = switch (builtin.os) {
     else => void,
 };
 
-pub const gl = switch (builtin.os) {
-    Os.windows, Os.linux, Os.macosx => @import("gl/index.zig"),
+pub const opengl = switch (builtin.os) {
+    Os.windows, Os.linux, Os.macosx => @import("opengl/index.zig"),
     else => void,
 };
 

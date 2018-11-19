@@ -11,11 +11,10 @@ const ziglet = @import("ziglet");
 
 const Key = ziglet.app.Key;
 const Window = ziglet.app.Window;
-const RenderBackend = ziglet.app.RenderBackend;
 
 pub fn main() !void {
-    const opts = Window.Options.{
-        .backend = RenderBackend.OpenGL,
+    const opts = ziglet.app.WindowOptions {
+        .backend = ziglet.app.RenderBackend.OpenGL,
         .fullscreen = false,
         .borderless = false,
         .resizeable = false,

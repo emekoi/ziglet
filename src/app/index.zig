@@ -7,13 +7,29 @@
 const builtin = @import("builtin");
 const Os = builtin.Os;
 
-const keyboard = @import("keyboard.zig");
-const mouse = @import("mouse.zig");
-const event = @import("event.zig");
+pub const keyboard = @import("keyboard.zig");
+pub const mouse = @import("mouse.zig");
+pub const event = @import("event.zig");
 
-pub const RenderBackend = enum.{
-    DirectX11,
+pub const RenderBackend = enum {
     OpenGL,
+    DirectX11,
+    Metal,
+};
+
+pub const WindowOptions = struct {
+    backend: RenderBackend,
+    fullscreen: bool,
+    borderless: bool,
+    resizeable: bool,
+    width: i32,
+    height: i32,
+    title: []const u8,
+};
+
+pub const WindowError = error {
+    InitError,
+    ShutdownError,
 };
 
 pub use switch (builtin.os) {
@@ -21,7 +37,3 @@ pub use switch (builtin.os) {
     else => @compileError("unsupported os"),
 };
 
-pub const Key = keyboard.Key;
-pub const Keyboard = keyboard.Keyboard;
-
-pub const MouseButton = mouse.MouseButton;

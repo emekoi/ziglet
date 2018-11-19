@@ -123,7 +123,7 @@ pub const CDS_FULLSCREEN = 4;
 
 pub const WNDPROC = stdcallcc fn(HWND, UINT, WPARAM, LPARAM) LRESULT;
 
-pub const WNDCLASSEX = extern struct.{
+pub const WNDCLASSEX = extern struct {
     cbSize: UINT,
     style: UINT,
     lpfnWndProc: ?WNDPROC,
@@ -138,19 +138,19 @@ pub const WNDCLASSEX = extern struct.{
     hIconSm: ?HICON,
 };
 
-pub const RECT = extern struct.{
+pub const RECT = extern struct {
     left: LONG,
     top: LONG,
     right: LONG,
     bottom: LONG,
 };
 
-pub const POINT = extern struct.{
+pub const POINT = extern struct {
     x: LONG,
     y: LONG,
 };
 
-pub const MSG = extern struct.{
+pub const MSG = extern struct {
     hWnd: HWND,
     message: UINT,
     wParam: WPARAM,
@@ -159,7 +159,7 @@ pub const MSG = extern struct.{
     pt: POINT,
 };
 
-pub const BITMAPINFOHEADER = extern struct.{
+pub const BITMAPINFOHEADER = extern struct {
     biSize: DWORD,
     biWidth: LONG,
     biHeight: LONG,
@@ -173,19 +173,19 @@ pub const BITMAPINFOHEADER = extern struct.{
     biClrImportant: DWORD,
 };
 
-pub const RGBQUAD = extern struct.{
+pub const RGBQUAD = extern struct {
     rgbBlue: BYTE,
     rgbGreen: BYTE,
     rgbRed: BYTE,
     rgbReserved: BYTE,
 };
 
-pub const BITMAPINFO = extern struct.{
+pub const BITMAPINFO = extern struct {
     bmiHeader: BITMAPINFOHEADER,
     bmiColors: [3]RGBQUAD,
 };
 
-pub const PIXELFORMATDESCRIPTOR = extern struct.{
+pub const PIXELFORMATDESCRIPTOR = extern struct {
     nSize: WORD,
     nVersion: WORD,
     dwFlags: DWORD,
@@ -214,7 +214,7 @@ pub const PIXELFORMATDESCRIPTOR = extern struct.{
     dwDamageMask: DWORD,
 };
 
-pub const DEVMODEW = extern struct.{
+pub const DEVMODEW = extern struct {
     dmDeviceName: [32]WCHAR,
     dmSpecVersion: WORD,
     dmDriverVersion: WORD,
@@ -306,23 +306,4 @@ pub extern "user32" stdcallcc fn ChangeDisplaySettingsW(lpDevMode: ?*DEVMODEW, d
 pub extern "user32" stdcallcc fn ShowCursor(bShow: BOOL) c_int;
 
 pub extern "user32" stdcallcc fn AdjustWindowRectEx(lpRect: *RECT, dwStyle: DWORD, bMenu: BOOL, dwExStyle: DWORD) BOOL;
-
-
-pub extern "gdi32" stdcallcc fn StretchDIBits(hdc: HDC, xDest: c_int, yDest: c_int, DestWidth: c_int, DestHeight: c_int,
-                    xSrc: c_int, ySrc: c_int, SrcWidth: c_int, SrcHeight: c_int, lpBits: ?*const c_void,
-                    lpbmi: ?*const BITMAPINFO, iUsage: UINT, rop: DWORD) c_int;
-
-pub extern "gdi32" stdcallcc fn ChoosePixelFormat(hdc: HDC, ppfd: ?*const PIXELFORMATDESCRIPTOR) c_int;
-
-pub extern "gdi32" stdcallcc fn SetPixelFormat(hdc: HDC, format: c_int, ppfd: ?*const PIXELFORMATDESCRIPTOR) BOOL;
-
-
-pub extern "opengl32" stdcallcc fn wglCreateContext(arg0: HDC) ?HGLRC;
-
-pub extern "opengl32" stdcallcc fn wglMakeCurrent(arg0: HDC, arg1: HGLRC) BOOL;
-
-pub extern "opengl32" stdcallcc fn wglDeleteContext(arg0: HGLRC) BOOL;
-
-pub extern "opengl32" stdcallcc fn wglGetProcAddress(LPCSTR) ?PROC;
-
 

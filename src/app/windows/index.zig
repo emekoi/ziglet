@@ -4,32 +4,26 @@
 //  under the terms of the MIT license. See LICENSE for details.
 //
 
-use @import("native.zig");
 
 const std = @import("std");
-const util = @import("util.zig");
 const super = @import("../index.zig");
 
-pub const Window = struct.{
+const native = @import("native.zig");
+const util = @import("util.zig");
+
+pub const Key = super.keyboard.Key;
+pub const Keyboard = super.keyboard.Keyboard;
+pub const MouseButton = super.mouse.MouseButton;
+
+const Backend = union(super.RenderBackend) {
+    OpenGL: @import("backend/opengl.zig").Context,
+    DirectX11: @import("backend/directx.zig").Context,
+};
+
+pub const Window = struct {
     const Self = @This();
 
-    pub const Error = error.{
-        InitError,
-        ShutdownError,
-        SetError,
-    };
-
-    pub const Options = struct.{
-        backend: super.RenderBackend,
-        fullscreen: bool,
-        borderless: bool,
-        resizeable: bool,
-        width: isize,
-        height: isize,
-        title: []const u8,
-    };
-
-    handle: HWND,
+    handle: native.HWND,
 
     fullscreen: bool,
     borderless: bool,
@@ -37,58 +31,58 @@ pub const Window = struct.{
     width: isize,
     height: isize,
     title: []const u8,
-    pub should_close: bool,
 
+    pub should_close: bool,
     pub keyboard: super.Keyboard,
 
-    stdcallcc fn wnd_proc(hWnd: HWND, msg: UINT, wParam: WPARAM, lParam: LPARAM) LRESULT {
-        var result: LRESULT = 0;
+    stdcallcc fn wnd_proc(hWnd: native.HWND, msg: native.UINT, wParam: native.WPARAM, lParam: native.LPARAM) native.LRESULT {
+        var result: native.LRESULT = 0;
 
-        var self = @intToPtr(?*Self, GetWindowLongPtrW(hWnd, GWLP_USERDATA)) orelse {
-            return DefWindowProcW(hWnd, msg, wParam, lParam);
+        var self = @intToPtr(?*Self, native.GetWindowLongPtrW(hWnd, native.GWLP_USERDATA)) orelse {
+            return native.DefWindowProcW(hWnd, msg, wParam, lParam);
         };
 
         switch (msg) {
-            WM_CLOSE, WM_DESTROY, WM_QUIT => {
+            native.WM_CLOSE, native.WM_DESTROY, native.WM_QUIT => {
                 self.should_close = true;
             },
-            WM_KEYDOWN => {
+            native.WM_KEYDOWN => {
                 self.update_keyboard(lParam >> 16, true);
             },
-            WM_KEYUP => {
+            native.WM_KEYUP => {
                 self.update_keyboard(lParam >> 16, false);
             },
             else => {
-                return DefWindowProcW(hWnd, msg, wParam, lParam);
+                return native.DefWindowProcW(hWnd, msg, wParam, lParam);
             }
         }
 
         return result;
     }
 
-    fn open_window(options: Options) Error!HWND {
+    fn open_window(options: super.WindowOptions) super.WindowError!native.HWND {
         const wtitle = util.L(options.title)[0..];
 
-        const wcex = WNDCLASSEX.{
-            .cbSize = @sizeOf(WNDCLASSEX),
-            .style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC,
+        const wcex = native.WNDCLASSEX {
+            .cbSize = @sizeOf(native.WNDCLASSEX),
+            .style = native.CS_HREDRAW | native.CS_VREDRAW | native.CS_OWNDC,
             .lpfnWndProc = wnd_proc,
             .cbClsExtra = 0,
             .cbWndExtra = 0,
-            .hInstance = GetModuleHandleW(null),
-            .hIcon = LoadIconW(null, IDI_WINLOGO).?,
-            .hCursor = LoadCursorW(null, IDC_ARROW).?,
+            .hInstance = native.GetModuleHandleW(null),
+            .hIcon = native.LoadIconW(null, native.IDI_WINLOGO).?,
+            .hCursor = native.LoadCursorW(null, native.IDC_ARROW).?,
             .hbrBackground = null,
             .lpszMenuName = null,
             .lpszClassName = wtitle.ptr,
             .hIconSm = null,
         };
 
-        if (RegisterClassExW(&wcex) == 0) {
+        if (native.RegisterClassExW(&wcex) == 0) {
             return error.InitError;
         }
 
-        var rect = RECT.{
+        var rect = native.RECT {
             .left = 0,
             .right = @truncate(c_int, options.width),
             .top = 0,
@@ -96,54 +90,57 @@ pub const Window = struct.{
         };
 
         var dwExStyle: u32 = 0;
-        var dwStyle: u32 = WS_CLIPSIBLINGS | WS_CLIPCHILDREN;
+        var dwStyle: u32 = native.WS_CLIPSIBLINGS | native.WS_CLIPCHILDREN;
 
         if (options.fullscreen) {
-            var dmScreenSettings: DEVMODEW = undefined;
-            dmScreenSettings.dmSize = @sizeOf(DEVMODEW);
+            var dmScreenSettings: native.DEVMODEW = undefined;
+            dmScreenSettings.dmSize = @sizeOf(native.DEVMODEW);
             dmScreenSettings.dmPelsWidth = @intCast(u32, options.width);
             dmScreenSettings.dmPelsHeight = @intCast(u32, options.height);
             dmScreenSettings.dmBitsPerPel = 32;
-            dmScreenSettings.dmFields = DM_BITSPERPEL | DM_PELSWIDTH | DM_PELSHEIGHT;
-            if (ChangeDisplaySettingsW(&dmScreenSettings, CDS_FULLSCREEN) != 0) {
+            dmScreenSettings.dmFields = native.DM_BITSPERPEL | native.DM_PELSWIDTH | native.DM_PELSHEIGHT;
+            if (native.ChangeDisplaySettingsW(&dmScreenSettings, native.CDS_FULLSCREEN) != 0) {
                 return error.InitError;
             } else {
-                dwExStyle = WS_EX_APPWINDOW;
-                dwStyle |= WS_POPUP;
-                _ = ShowCursor(FALSE);
+                dwExStyle = native.WS_EX_APPWINDOW;
+                dwStyle |= native.WS_POPUP;
+                _ = native.ShowCursor(native.FALSE);
             }
         } else {
-            dwExStyle = WS_EX_APPWINDOW | WS_EX_WINDOWEDGE | WS_EX_ACCEPTFILES;
-            dwStyle |= DWORD(WS_OVERLAPPEDWINDOW);
+            dwExStyle = native.WS_EX_APPWINDOW | native.WS_EX_WINDOWEDGE | native.WS_EX_ACCEPTFILES;
+            dwStyle |= native.DWORD(native.WS_OVERLAPPEDWINDOW);
 
             if (options.resizeable) {
-                dwStyle |= DWORD(WS_THICKFRAME) | DWORD(WS_MAXIMIZEBOX);
+                dwStyle |= native.DWORD(native.WS_THICKFRAME) | native.DWORD(native.WS_MAXIMIZEBOX);
             } else {
-                dwStyle &= ~DWORD(WS_MAXIMIZEBOX);
-                dwStyle &= ~DWORD(WS_THICKFRAME);
+                dwStyle &= ~native.DWORD(native.WS_MAXIMIZEBOX);
+                dwStyle &= ~native.DWORD(native.WS_THICKFRAME);
             }
 
             if (options.borderless) {
-                dwStyle &= ~DWORD(WS_THICKFRAME);
+                dwStyle &= ~native.DWORD(native.WS_THICKFRAME);
             }
         }
 
-        if (AdjustWindowRectEx(&rect, dwStyle, FALSE, dwExStyle) == 0) {
+        if (native.AdjustWindowRectEx(&rect, dwStyle, native.FALSE, dwExStyle) == 0) {
             return error.InitError;
         }
 
         rect.right -= rect.left;
         rect.bottom -= rect.top;
 
-        return CreateWindowExW(dwExStyle,
+        const result = native.CreateWindowExW(dwExStyle,
             wtitle.ptr, wtitle.ptr, dwStyle,
-            CW_USEDEFAULT, CW_USEDEFAULT, rect.right, rect.bottom,
+            native.CW_USEDEFAULT, native.CW_USEDEFAULT, rect.right, rect.bottom,
             null, null, wcex.hInstance, null
         ) orelse return error.InitError;
+        _ = native.ShowWindow(result, native.SW_NORMAL);
+
+        return result;
     }
 
-    pub fn init(options: Options) !Self {
-        var result = Self.{
+    pub fn init(options: super.WindowOptions) super.WindowError!Self {
+        var result = Self {
             .handle = undefined,
             .fullscreen = options.fullscreen,
             .borderless = options.borderless,
@@ -158,17 +155,16 @@ pub const Window = struct.{
         errdefer result.deinit();
 
         result.handle = try open_window(options);
-        _ = ShowWindow(result.handle, SW_NORMAL);
         
         return result;
     }
 
     pub fn deinit(self: Self) void {
         if (self.fullscreen) {
-            _ = ChangeDisplaySettingsW(null, 0);
-            _ = ShowCursor(TRUE);
+            _ = native.ChangeDisplaySettingsW(null, 0);
+            _ = native.ShowCursor(native.TRUE);
         }
-        _ = UnregisterClassW(util.L(self.title)[0..].ptr, GetModuleHandleW(null));
+        _ = native.UnregisterClassW(util.L(self.title)[0..].ptr, native.GetModuleHandleW(null));
     }
 
     fn update_keyboard(self: *Self, wparam: usize, state: bool) void {
@@ -254,74 +250,42 @@ pub const Window = struct.{
             0x046 => self.keyboard.set_key(super.Key.ScrollLock, state),
             0x02A => self.keyboard.set_key(super.Key.LeftShift, state),
             0x036 => self.keyboard.set_key(super.Key.RightShift, state),
-            0x01D => self.keyboard.set_key(super.Key.LeftCtrl, state),
-            0x11D => self.keyboard.set_key(super.Key.RightCtrl, state),
-            0x052 => self.keyboard.set_key(super.Key.NumPad0, state),
-            0x04F => self.keyboard.set_key(super.Key.NumPad1, state),
-            0x050 => self.keyboard.set_key(super.Key.NumPad2, state),
-            0x051 => self.keyboard.set_key(super.Key.NumPad3, state),
-            0x04B => self.keyboard.set_key(super.Key.NumPad4, state),
-            0x04C => self.keyboard.set_key(super.Key.NumPad5, state),
-            0x04D => self.keyboard.set_key(super.Key.NumPad6, state),
-            0x047 => self.keyboard.set_key(super.Key.NumPad7, state),
-            0x048 => self.keyboard.set_key(super.Key.NumPad8, state),
-            0x049 => self.keyboard.set_key(super.Key.NumPad9, state),
-            0x053 => self.keyboard.set_key(super.Key.NumPadDot, state),
-            0x135 => self.keyboard.set_key(super.Key.NumPadSlash, state),
-            0x037 => self.keyboard.set_key(super.Key.NumPadAsterisk, state),
-            0x04A => self.keyboard.set_key(super.Key.NumPadMinus, state),
-            0x04E => self.keyboard.set_key(super.Key.NumPadPlus, state),
-            0x11C => self.keyboard.set_key(super.Key.NumPadEnter, state),
+            0x01D => self.keyboard.set_key(super.Key.LeftControl, state),
+            0x11D => self.keyboard.set_key(super.Key.RightControl, state),
+            0x052 => self.keyboard.set_key(super.Key.Kp0, state),
+            0x04F => self.keyboard.set_key(super.Key.Kp1, state),
+            0x050 => self.keyboard.set_key(super.Key.Kp2, state),
+            0x051 => self.keyboard.set_key(super.Key.Kp3, state),
+            0x04B => self.keyboard.set_key(super.Key.Kp4, state),
+            0x04C => self.keyboard.set_key(super.Key.Kp5, state),
+            0x04D => self.keyboard.set_key(super.Key.Kp6, state),
+            0x047 => self.keyboard.set_key(super.Key.Kp7, state),
+            0x048 => self.keyboard.set_key(super.Key.Kp8, state),
+            0x049 => self.keyboard.set_key(super.Key.Kp9, state),
+            0x053 => self.keyboard.set_key(super.Key.KpDecimal, state),
+            0x135 => self.keyboard.set_key(super.Key.KpDivide, state),
+            0x037 => self.keyboard.set_key(super.Key.KpMultiply, state),
+            0x04A => self.keyboard.set_key(super.Key.KpSubtract, state),
+            0x04E => self.keyboard.set_key(super.Key.KpMultiply, state),
+            0x11C => self.keyboard.set_key(super.Key.KpEnter, state),
             else => {},
         }
     }
 
     fn message_loop(self: *const Self) void {
-        var msg: MSG = undefined;
+        var msg: native.MSG = undefined;
 
-        while (PeekMessageW(&msg, self.handle, 0, 0, PM_REMOVE) == TRUE) {
-            if (msg.message == WM_QUIT) break;
-            _ = TranslateMessage(&msg);
-            _ = DispatchMessageW(&msg);
+        while (native.PeekMessageW(&msg, self.handle, 0, 0, native.PM_REMOVE) == native.TRUE) {
+            if (msg.message == native.WM_QUIT) break;
+            _ = native.TranslateMessage(&msg);
+            _ = native.DispatchMessageW(&msg);
         }
     }
 
     pub fn update(self: *Self) void {
-        _ = SetWindowLongPtrW(self.handle, GWLP_USERDATA, @ptrToInt(self));
+        _ = native.SetWindowLongPtrW(self.handle, native.GWLP_USERDATA, @ptrToInt(self));
 
         self.keyboard.update();
         self.message_loop();
-    }
-
-    pub fn get_fullscreen(self: *const Self) bool {
-        return self.fullscreen;
-    }
-
-    pub fn get_borderless(self: *const Self) bool {
-        return self.borderless;
-    }
-
-    pub fn get_resizeable(self: *const Self) bool {
-        return self.resizeable;
-    }
-
-    pub fn get_width(self: *const Self) isize {
-        return self.width;
-    }
-
-    pub fn get_height(self: *const Self) isize {
-        return self.height;
-    }
-
-    pub fn get_title(self: *const Self) []const u8 {
-        return self.title;
-    }
-
-    pub fn set_title(self: *Self, title: []const u8) !void {
-        self.title = title;
-        const wtitle = util.L(self.title)[0..];
-        if (SetWindowTextW(self.handle, wtitle.ptr) == FALSE) {
-            return error.SetError;
-        }
     }
 };

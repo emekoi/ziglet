@@ -27,6 +27,8 @@ pub const HMENU = HANDLE;
 
 pub const HDC = HANDLE;
 
+pub const HDROP = HANDLE;
+
 pub const LPARAM = LONG_PTR;
 
 pub const WPARAM = LONG_PTR;
@@ -78,6 +80,8 @@ pub const WM_MBUTTONUP = 520;
 pub const WM_MOUSEWHEEL = 522;
 
 pub const WM_MOUSEHWHEEL = 526;
+
+pub const WM_DROPFILES = 563;
 
 pub const WM_MOUSELEAVE = 675;
 
@@ -318,6 +322,8 @@ pub extern "user32" stdcallcc fn ShowCursor(bShow: BOOL) c_int;
 pub extern "user32" stdcallcc fn AdjustWindowRectEx(lpRect: *RECT, dwStyle: DWORD, bMenu: BOOL, dwExStyle: DWORD) BOOL;
 
 pub extern "user32" stdcallcc fn TrackMouseEvent(lpEventTrack: *TRACKMOUSEEVENT) BOOL;
+
+pub extern "shell32" stdcallcc fn DragQueryFileW(hDrop: HDROP, iFile: UINT, lpszFile: LPCWSTR, cch: UINT) UINT;
 
 pub inline fn LOWORD(l: DWORD) WORD {
     return @intCast(WORD, (l & 0xffff));

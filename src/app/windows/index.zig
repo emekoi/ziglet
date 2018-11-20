@@ -7,10 +7,12 @@
 
 const std = @import("std");
 const super = @import("../index.zig");
+const util = @import("../util.zig");
 
 const native = @import("native.zig");
-const util = @import("util.zig");
+const mem = std.mem;
 
+pub const Event = super.event.Event;
 pub const Key = super.keyboard.Key;
 pub const Keyboard = super.keyboard.Keyboard;
 pub const MouseButton = super.mouse.MouseButton;
@@ -19,6 +21,111 @@ const Backend = union(super.RenderBackend) {
     OpenGL: @import("backend/opengl.zig").Context,
     DirectX11: @import("backend/directx.zig").Context,
 };
+
+fn intToKey(lParam: native.LPARAM) Key {
+    return switch (lParam & 0x1ff) {
+        0x00B => Key.Key0,
+        0x002 => Key.Key1,
+        0x003 => Key.Key2,
+        0x004 => Key.Key3,
+        0x005 => Key.Key4,
+        0x006 => Key.Key5,
+        0x007 => Key.Key6,
+        0x008 => Key.Key7,
+        0x009 => Key.Key8,
+        0x00A => Key.Key9,
+        0x01E => Key.A,
+        0x030 => Key.B,
+        0x02E => Key.C,
+        0x020 => Key.D,
+        0x012 => Key.E,
+        0x021 => Key.F,
+        0x022 => Key.G,
+        0x023 => Key.H,
+        0x017 => Key.I,
+        0x024 => Key.J,
+        0x025 => Key.K,
+        0x026 => Key.L,
+        0x032 => Key.M,
+        0x031 => Key.N,
+        0x018 => Key.O,
+        0x019 => Key.P,
+        0x010 => Key.Q,
+        0x013 => Key.R,
+        0x01F => Key.S,
+        0x014 => Key.T,
+        0x016 => Key.U,
+        0x02F => Key.V,
+        0x011 => Key.W,
+        0x02D => Key.X,
+        0x015 => Key.Y,
+        0x02C => Key.Z,
+        0x03B => Key.F1,
+        0x03C => Key.F2,
+        0x03D => Key.F3,
+        0x03E => Key.F4,
+        0x03F => Key.F5,
+        0x040 => Key.F6,
+        0x041 => Key.F7,
+        0x042 => Key.F8,
+        0x043 => Key.F9,
+        0x044 => Key.F10,
+        0x057 => Key.F11,
+        0x058 => Key.F12,
+        0x150 => Key.Down,
+        0x14B => Key.Left,
+        0x14D => Key.Right,
+        0x148 => Key.Up,
+        0x028 => Key.Apostrophe,
+        0x029 => Key.Backquote,
+        0x02B => Key.Backslash,
+        0x033 => Key.Comma,
+        0x00D => Key.Equal,
+        0x01A => Key.LeftBracket,
+        0x00C => Key.Minus,
+        0x034 => Key.Period,
+        0x01B => Key.RightBracket,
+        0x027 => Key.Semicolon,
+        0x035 => Key.Slash,
+        0x00E => Key.Backspace,
+        0x153 => Key.Delete,
+        0x14F => Key.End,
+        0x01C => Key.Enter,
+        0x001 => Key.Escape,
+        0x147 => Key.Home,
+        0x152 => Key.Insert,
+        0x15D => Key.Menu,
+        0x151 => Key.PageDown,
+        0x149 => Key.PageUp,
+        0x045 => Key.Pause,
+        0x039 => Key.Space,
+        0x00F => Key.Tab,
+        0x145 => Key.NumLock,
+        0x03A => Key.CapsLock,
+        0x046 => Key.ScrollLock,
+        0x02A => Key.LeftShift,
+        0x036 => Key.RightShift,
+        0x01D => Key.LeftControl,
+        0x11D => Key.RightControl,
+        0x052 => Key.Kp0,
+        0x04F => Key.Kp1,
+        0x050 => Key.Kp2,
+        0x051 => Key.Kp3,
+        0x04B => Key.Kp4,
+        0x04C => Key.Kp5,
+        0x04D => Key.Kp6,
+        0x047 => Key.Kp7,
+        0x048 => Key.Kp8,
+        0x049 => Key.Kp9,
+        0x053 => Key.KpDecimal,
+        0x135 => Key.KpDivide,
+        0x037 => Key.KpMultiply,
+        0x04A => Key.KpSubtract,
+        0x04E => Key.KpMultiply,
+        0x11C => Key.KpEnter,
+        else => Key.Invalid,
+    };
+}
 
 pub const Window = struct {
     const Self = @This();
@@ -32,8 +139,29 @@ pub const Window = struct {
     height: isize,
     title: []const u8,
 
+    mouse_tracked: bool,
+    iconified: bool,
+
     pub should_close: bool,
     pub keyboard: super.Keyboard,
+    pub event_pump: super.event.EventPump,
+
+    fn window_resized(self: *Self) ?[2]i32 {
+        var rect: native.RECT = undefined;
+        if (native.GetClientRect(self.handle, &rect) == native.TRUE) {
+            const new_width = rect.right - rect.left;
+            const new_height = rect.bottom - rect.top;
+            if ((new_width != self.width) or (new_height != self.height)) {
+                self.width = new_width;
+                self.height = new_height;
+                return []i32 { new_width, new_height };
+            }
+        } else {
+            self.width = 1;
+            self.height = 1;
+        }
+        return null;
+    }
 
     stdcallcc fn wnd_proc(hWnd: native.HWND, msg: native.UINT, wParam: native.WPARAM, lParam: native.LPARAM) native.LRESULT {
         var result: native.LRESULT = 0;
@@ -43,14 +171,121 @@ pub const Window = struct {
         };
 
         switch (msg) {
-            native.WM_CLOSE, native.WM_DESTROY, native.WM_QUIT => {
+            native.WM_CLOSE => {
                 self.should_close = true;
             },
-            native.WM_KEYDOWN => {
-                self.update_keyboard(lParam >> 16, true);
+            native.WM_KEYDOWN, native.WM_SYSKEYDOWN => {
+                self.event_pump.push(Event {
+                    .KeyDown = intToKey(lParam >> 16)
+                }) catch unreachable;
             },
-            native.WM_KEYUP => {
-                self.update_keyboard(lParam >> 16, false);
+            native.WM_KEYUP, native.WM_SYSKEYUP => {
+                self.event_pump.push(Event {
+                    .KeyUp = intToKey(lParam >> 16)
+                }) catch unreachable;
+            },
+            native.WM_CHAR, native.WM_SYSCHAR => {
+                self.event_pump.push(Event {
+                    .Char = @intCast(u8, wParam)
+                }) catch unreachable;
+            },
+            native.WM_LBUTTONDOWN => {
+                self.event_pump.push(Event {
+                    .MouseDown = MouseButton.Left
+                }) catch unreachable;
+            },
+            native.WM_RBUTTONDOWN => {
+                self.event_pump.push(Event {
+                    .MouseDown = MouseButton.Right
+                }) catch unreachable;
+            },
+            native.WM_MBUTTONDOWN => {
+                self.event_pump.push(Event {
+                    .MouseDown = MouseButton.Middle,
+                }) catch unreachable;
+            },
+            native.WM_LBUTTONUP => {
+                self.event_pump.push(Event {
+                    .MouseUp = MouseButton.Left
+                }) catch unreachable;
+            },
+            native.WM_RBUTTONUP => {
+                self.event_pump.push(Event {
+                    .MouseUp = MouseButton.Right
+                }) catch unreachable;
+            },
+            native.WM_MBUTTONUP => {
+                self.event_pump.push(Event {
+                    .MouseUp = MouseButton.Middle,
+                }) catch unreachable;
+            },
+            native.WM_MOUSEWHEEL => {
+                if (self.mouse_tracked) {
+                    const scroll = @intToFloat(f32, native.HIWORD(@truncate(u32, wParam)));
+                    std.debug.warn("@intCast(native.SHORT, wParam >> 16) == {}\n", scroll);
+                    // self.event_pump.push(Event {
+                    //     .MouseScroll = []f32 { 0.0, scroll },
+                    // }) catch unreachable;
+                }
+            },
+            native.WM_MOUSEHWHEEL => {
+                if (self.mouse_tracked) {
+                    const scroll = @floatCast(f32,
+                        @bitCast(f16, @intCast(native.SHORT, wParam >> 16))
+                    );
+                    self.event_pump.push(Event {
+                        .MouseScroll = []f32 { scroll, 0.0 },
+                    }) catch unreachable;
+                }
+            },
+            native.WM_MOUSEMOVE => {
+                const mouse = []f32 {
+                    @bitCast(f32, native.GET_X_LPARAM(lParam)),
+                    @bitCast(f32, native.GET_Y_LPARAM(lParam)),
+                };
+
+                if (!self.mouse_tracked) {
+                    self.mouse_tracked = true;
+                    var tme: native.TRACKMOUSEEVENT = undefined;
+                    tme.cbSize = @sizeOf(native.TRACKMOUSEEVENT);
+                    tme.dwFlags = native.TME_LEAVE;
+                    tme.hwndTrack = self.handle;
+                    _ = native.TrackMouseEvent(&tme);
+                    self.event_pump.push(Event {
+                        .MouseEnter = {},
+                    }) catch unreachable;
+                }
+                
+                self.event_pump.push(Event {
+                    .MouseMove = mouse,
+                }) catch unreachable;
+            },
+            native.WM_MOUSELEAVE => {
+                self.mouse_tracked = false;
+                self.event_pump.push(Event {
+                    .MouseLeave = {},
+                }) catch unreachable;
+            },
+            native.WM_SIZE => {
+                const iconified = wParam == native.SIZE_MINIMIZED;
+                if (iconified != self.iconified) {
+                    self.iconified = iconified;
+                    if (iconified) {
+                        self.event_pump.push(Event {
+                            .Iconified = {},
+                        }) catch unreachable;
+                    }
+                    else {
+                        self.event_pump.push(Event {
+                            .Restored = {},
+                        }) catch unreachable;
+                    }
+                }
+                if (self.window_resized()) |new_size| {
+                    self.event_pump.push(Event {
+                        .Resized = new_size,
+                    }) catch unreachable;
+                }
             },
             else => {
                 return native.DefWindowProcW(hWnd, msg, wParam, lParam);
@@ -139,7 +374,7 @@ pub const Window = struct {
         return result;
     }
 
-    pub fn init(options: super.WindowOptions) super.WindowError!Self {
+    pub fn init(allocator: *mem.Allocator, options: super.WindowOptions) super.WindowError!Self {
         var result = Self {
             .handle = undefined,
             .fullscreen = options.fullscreen,
@@ -149,7 +384,10 @@ pub const Window = struct {
             .height = options.height,
             .title = options.title,
             .should_close = false,
+            .mouse_tracked = false,
+            .iconified = false,
             .keyboard = super.Keyboard.new(),
+            .event_pump = super.event.EventPump.init(allocator),
         };
 
         errdefer result.deinit();
@@ -165,111 +403,6 @@ pub const Window = struct {
             _ = native.ShowCursor(native.TRUE);
         }
         _ = native.UnregisterClassW(util.L(self.title)[0..].ptr, native.GetModuleHandleW(null));
-    }
-
-    fn update_keyboard(self: *Self, wparam: usize, state: bool) void {
-        switch (wparam & 0x1ff) {
-            0x00B => self.keyboard.set_key(super.Key.Key0, state),
-            0x002 => self.keyboard.set_key(super.Key.Key1, state),
-            0x003 => self.keyboard.set_key(super.Key.Key2, state),
-            0x004 => self.keyboard.set_key(super.Key.Key3, state),
-            0x005 => self.keyboard.set_key(super.Key.Key4, state),
-            0x006 => self.keyboard.set_key(super.Key.Key5, state),
-            0x007 => self.keyboard.set_key(super.Key.Key6, state),
-            0x008 => self.keyboard.set_key(super.Key.Key7, state),
-            0x009 => self.keyboard.set_key(super.Key.Key8, state),
-            0x00A => self.keyboard.set_key(super.Key.Key9, state),
-            0x01E => self.keyboard.set_key(super.Key.A, state),
-            0x030 => self.keyboard.set_key(super.Key.B, state),
-            0x02E => self.keyboard.set_key(super.Key.C, state),
-            0x020 => self.keyboard.set_key(super.Key.D, state),
-            0x012 => self.keyboard.set_key(super.Key.E, state),
-            0x021 => self.keyboard.set_key(super.Key.F, state),
-            0x022 => self.keyboard.set_key(super.Key.G, state),
-            0x023 => self.keyboard.set_key(super.Key.H, state),
-            0x017 => self.keyboard.set_key(super.Key.I, state),
-            0x024 => self.keyboard.set_key(super.Key.J, state),
-            0x025 => self.keyboard.set_key(super.Key.K, state),
-            0x026 => self.keyboard.set_key(super.Key.L, state),
-            0x032 => self.keyboard.set_key(super.Key.M, state),
-            0x031 => self.keyboard.set_key(super.Key.N, state),
-            0x018 => self.keyboard.set_key(super.Key.O, state),
-            0x019 => self.keyboard.set_key(super.Key.P, state),
-            0x010 => self.keyboard.set_key(super.Key.Q, state),
-            0x013 => self.keyboard.set_key(super.Key.R, state),
-            0x01F => self.keyboard.set_key(super.Key.S, state),
-            0x014 => self.keyboard.set_key(super.Key.T, state),
-            0x016 => self.keyboard.set_key(super.Key.U, state),
-            0x02F => self.keyboard.set_key(super.Key.V, state),
-            0x011 => self.keyboard.set_key(super.Key.W, state),
-            0x02D => self.keyboard.set_key(super.Key.X, state),
-            0x015 => self.keyboard.set_key(super.Key.Y, state),
-            0x02C => self.keyboard.set_key(super.Key.Z, state),
-            0x03B => self.keyboard.set_key(super.Key.F1, state),
-            0x03C => self.keyboard.set_key(super.Key.F2, state),
-            0x03D => self.keyboard.set_key(super.Key.F3, state),
-            0x03E => self.keyboard.set_key(super.Key.F4, state),
-            0x03F => self.keyboard.set_key(super.Key.F5, state),
-            0x040 => self.keyboard.set_key(super.Key.F6, state),
-            0x041 => self.keyboard.set_key(super.Key.F7, state),
-            0x042 => self.keyboard.set_key(super.Key.F8, state),
-            0x043 => self.keyboard.set_key(super.Key.F9, state),
-            0x044 => self.keyboard.set_key(super.Key.F10, state),
-            0x057 => self.keyboard.set_key(super.Key.F11, state),
-            0x058 => self.keyboard.set_key(super.Key.F12, state),
-            0x150 => self.keyboard.set_key(super.Key.Down, state),
-            0x14B => self.keyboard.set_key(super.Key.Left, state),
-            0x14D => self.keyboard.set_key(super.Key.Right, state),
-            0x148 => self.keyboard.set_key(super.Key.Up, state),
-            0x028 => self.keyboard.set_key(super.Key.Apostrophe, state),
-            0x029 => self.keyboard.set_key(super.Key.Backquote, state),
-            0x02B => self.keyboard.set_key(super.Key.Backslash, state),
-            0x033 => self.keyboard.set_key(super.Key.Comma, state),
-            0x00D => self.keyboard.set_key(super.Key.Equal, state),
-            0x01A => self.keyboard.set_key(super.Key.LeftBracket, state),
-            0x00C => self.keyboard.set_key(super.Key.Minus, state),
-            0x034 => self.keyboard.set_key(super.Key.Period, state),
-            0x01B => self.keyboard.set_key(super.Key.RightBracket, state),
-            0x027 => self.keyboard.set_key(super.Key.Semicolon, state),
-            0x035 => self.keyboard.set_key(super.Key.Slash, state),
-            0x00E => self.keyboard.set_key(super.Key.Backspace, state),
-            0x153 => self.keyboard.set_key(super.Key.Delete, state),
-            0x14F => self.keyboard.set_key(super.Key.End, state),
-            0x01C => self.keyboard.set_key(super.Key.Enter, state),
-            0x001 => self.keyboard.set_key(super.Key.Escape, state),
-            0x147 => self.keyboard.set_key(super.Key.Home, state),
-            0x152 => self.keyboard.set_key(super.Key.Insert, state),
-            0x15D => self.keyboard.set_key(super.Key.Menu, state),
-            0x151 => self.keyboard.set_key(super.Key.PageDown, state),
-            0x149 => self.keyboard.set_key(super.Key.PageUp, state),
-            0x045 => self.keyboard.set_key(super.Key.Pause, state),
-            0x039 => self.keyboard.set_key(super.Key.Space, state),
-            0x00F => self.keyboard.set_key(super.Key.Tab, state),
-            0x145 => self.keyboard.set_key(super.Key.NumLock, state),
-            0x03A => self.keyboard.set_key(super.Key.CapsLock, state),
-            0x046 => self.keyboard.set_key(super.Key.ScrollLock, state),
-            0x02A => self.keyboard.set_key(super.Key.LeftShift, state),
-            0x036 => self.keyboard.set_key(super.Key.RightShift, state),
-            0x01D => self.keyboard.set_key(super.Key.LeftControl, state),
-            0x11D => self.keyboard.set_key(super.Key.RightControl, state),
-            0x052 => self.keyboard.set_key(super.Key.Kp0, state),
-            0x04F => self.keyboard.set_key(super.Key.Kp1, state),
-            0x050 => self.keyboard.set_key(super.Key.Kp2, state),
-            0x051 => self.keyboard.set_key(super.Key.Kp3, state),
-            0x04B => self.keyboard.set_key(super.Key.Kp4, state),
-            0x04C => self.keyboard.set_key(super.Key.Kp5, state),
-            0x04D => self.keyboard.set_key(super.Key.Kp6, state),
-            0x047 => self.keyboard.set_key(super.Key.Kp7, state),
-            0x048 => self.keyboard.set_key(super.Key.Kp8, state),
-            0x049 => self.keyboard.set_key(super.Key.Kp9, state),
-            0x053 => self.keyboard.set_key(super.Key.KpDecimal, state),
-            0x135 => self.keyboard.set_key(super.Key.KpDivide, state),
-            0x037 => self.keyboard.set_key(super.Key.KpMultiply, state),
-            0x04A => self.keyboard.set_key(super.Key.KpSubtract, state),
-            0x04E => self.keyboard.set_key(super.Key.KpMultiply, state),
-            0x11C => self.keyboard.set_key(super.Key.KpEnter, state),
-            else => {},
-        }
     }
 
     fn message_loop(self: *const Self) void {

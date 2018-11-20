@@ -27,10 +27,6 @@ pub const HMENU = HANDLE;
 
 pub const HDC = HANDLE;
 
-pub const HGLRC = HANDLE;
-
-pub const PROC = *@OpaqueType();
-
 pub const LPARAM = LONG_PTR;
 
 pub const WPARAM = LONG_PTR;
@@ -45,17 +41,45 @@ pub const CS_HREDRAW = 2;
 
 pub const CS_OWNDC = 32;
 
-pub const WM_PAINT = 0x000f;
+pub const WM_DESTROY = 2;
 
-pub const WM_DESTROY = 0x0002;
+pub const WM_SIZE = 5;
 
-pub const WM_CLOSE = 0x0010;
+pub const WM_CLOSE = 16;
 
-pub const WM_KEYDOWN = 0x0100;
+pub const WM_QUIT = 18;
 
-pub const WM_KEYUP = 0x0101;
+pub const WM_KEYDOWN = 256;
 
-pub const WM_QUIT = 0x0012;
+pub const WM_KEYUP = 257;
+
+pub const WM_CHAR = 258;
+
+pub const WM_SYSCHAR = 262;
+
+pub const WM_SYSKEYDOWN = 260;
+
+pub const WM_SYSKEYUP = 261;
+
+pub const WM_MOUSEMOVE = 512;
+
+pub const WM_LBUTTONDOWN = 513;
+
+pub const WM_LBUTTONUP = 514;
+
+pub const WM_RBUTTONDOWN = 516;
+
+pub const WM_RBUTTONUP = 517;
+
+pub const WM_MBUTTONDOWN = 519;
+
+pub const WM_MBUTTONUP = 520;
+
+pub const WM_MOUSEWHEEL = 522;
+
+pub const WM_MOUSEHWHEEL = 526;
+
+pub const WM_MOUSELEAVE = 675;
 
 pub const IDC_ARROW = @intToPtr(MAKEINTRESOURCE, 32512);
 
@@ -121,6 +145,12 @@ pub const DM_BITSPERPEL = 0x00040000;
 
 pub const CDS_FULLSCREEN = 4;
 
+pub const SIZE_MINIMIZED = 1;
+
+pub const SIZE_MAXIMIZED = 2;
+
+pub const TME_LEAVE = 2;
+
 pub const WNDPROC = stdcallcc fn(HWND, UINT, WPARAM, LPARAM) LRESULT;
 
 pub const WNDCLASSEX = extern struct {
@@ -159,60 +189,31 @@ pub const MSG = extern struct {
     pt: POINT,
 };
 
-pub const BITMAPINFOHEADER = extern struct {
-    biSize: DWORD,
-    biWidth: LONG,
-    biHeight: LONG,
-    biPlanes: WORD,
-    biBitCount: WORD,
-    biCompression: DWORD,
-    biSizeImage: DWORD,
-    biXPelsPerMeter: LONG,
-    biYPelsPerMeter: LONG,
-    biClrUsed: DWORD,
-    biClrImportant: DWORD,
-};
+// pub const BITMAPINFOHEADER = extern struct {
+//     biSize: DWORD,
+//     biWidth: LONG,
+//     biHeight: LONG,
+//     biPlanes: WORD,
+//     biBitCount: WORD,
+//     biCompression: DWORD,
+//     biSizeImage: DWORD,
+//     biXPelsPerMeter: LONG,
+//     biYPelsPerMeter: LONG,
+//     biClrUsed: DWORD,
+//     biClrImportant: DWORD,
+// };
 
-pub const RGBQUAD = extern struct {
-    rgbBlue: BYTE,
-    rgbGreen: BYTE,
-    rgbRed: BYTE,
-    rgbReserved: BYTE,
-};
+// pub const RGBQUAD = extern struct {
+//     rgbBlue: BYTE,
+//     rgbGreen: BYTE,
+//     rgbRed: BYTE,
+//     rgbReserved: BYTE,
+// };
 
-pub const BITMAPINFO = extern struct {
-    bmiHeader: BITMAPINFOHEADER,
-    bmiColors: [3]RGBQUAD,
-};
-
-pub const PIXELFORMATDESCRIPTOR = extern struct {
-    nSize: WORD,
-    nVersion: WORD,
-    dwFlags: DWORD,
-    iPixelType: BYTE,
-    cColorBits: BYTE,
-    cRedBits: BYTE,
-    cRedShift: BYTE,
-    cGreenBits: BYTE,
-    cGreenShift: BYTE,
-    cBlueBits: BYTE,
-    cBlueShift: BYTE,
-    cAlphaBits: BYTE,
-    cAlphaShift: BYTE,
-    cAccumBits: BYTE,
-    cAccumRedBits: BYTE,
-    cAccumGreenBits: BYTE,
-    cAccumBlueBits: BYTE,
-    cAccumAlphaBits: BYTE,
-    cDepthBits: BYTE,
-    cStencilBits: BYTE,
-    cAuxBuffers: BYTE,
-    iLayerType: BYTE,
-    bReserved: BYTE,
-    dwLayerMask: DWORD,
-    dwVisibleMask: DWORD,
-    dwDamageMask: DWORD,
-};
+// pub const BITMAPINFO = extern struct {
+//     bmiHeader: BITMAPINFOHEADER,
+//     bmiColors: [3]RGBQUAD,
+// };
 
 pub const DEVMODEW = extern struct {
     dmDeviceName: [32]WCHAR,
@@ -251,6 +252,13 @@ pub const DEVMODEW = extern struct {
     dmPanningHeight: DWORD,
 };
 
+pub const TRACKMOUSEEVENT = extern struct {
+    cbSize: DWORD,
+    dwFlags: DWORD,
+    hwndTrack: HWND,
+    dwHoverTime: DWORD,
+};
+
 pub extern "user32" stdcallcc fn LoadCursorW(hInstance: ?HINSTANCE, lpCursorName: LPCWSTR) ?HCURSOR;
 
 pub extern "user32" stdcallcc fn LoadIconW(hInstance: ?HINSTANCE, lpIconName: LPCWSTR) ?HICON;
@@ -260,6 +268,8 @@ pub extern "user32" stdcallcc fn RegisterClassExW(lpWndClassEx: *const WNDCLASSE
 pub extern "user32" stdcallcc fn UnregisterClassW(lpClassName: LPCWSTR, hInstance: HMODULE) BOOL;
 
 pub extern "user32" stdcallcc fn AdjustWindowRect(lpRect: *RECT, dwStyle: DWORD, bMenu: BOOL) BOOL;
+
+pub extern "user32" stdcallcc fn GetClientRect(wnd: HWND, lpRect: *RECT) BOOL;
 
 pub extern "user32" stdcallcc fn CreateWindowExW(dwExStyle: DWORD, lpClassName: LPCWSTR,
                     lpWindowName: LPCWSTR, dwStyle: DWORD, X: c_int,
@@ -307,3 +317,28 @@ pub extern "user32" stdcallcc fn ShowCursor(bShow: BOOL) c_int;
 
 pub extern "user32" stdcallcc fn AdjustWindowRectEx(lpRect: *RECT, dwStyle: DWORD, bMenu: BOOL, dwExStyle: DWORD) BOOL;
 
+pub extern "user32" stdcallcc fn TrackMouseEvent(lpEventTrack: *TRACKMOUSEEVENT) BOOL;
+
+pub inline fn LOWORD(l: DWORD) WORD {
+    return @intCast(WORD, (l & 0xffff));
+}
+
+pub inline fn HIWORD(l: DWORD) WORD {
+    return @intCast(WORD, ((l >> 16) & 0xffff));
+}
+
+pub inline fn LOBYTE(l: WORD) BYTE {
+    return @intCast(BYTE, (l & 0xff));
+}
+
+pub inline fn HIBYTE(l: WORD) BYTE {
+    return @intCast(BYTE, ((l >> 8) & 0xff));
+}
+
+pub inline fn GET_X_LPARAM(lp: LPARAM) c_int {
+    return @intCast(c_int, @truncate(c_ushort, LOWORD(@intCast(DWORD, lp))));
+}
+
+pub inline fn GET_Y_LPARAM(lp: LPARAM) c_int {
+    return @intCast(c_int, @truncate(c_ushort, HIWORD(@intCast(DWORD, lp))));
+}

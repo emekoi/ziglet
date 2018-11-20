@@ -7,20 +7,21 @@ pub const Executable = struct {
     input: []const u8,
 };
 
-const examples = []Executable {
-    Executable { .output = "../bin/basic", .input = "examples/basic.zig"},
+const examples = []const Executable {
+    Executable { .output = "events", .input = "examples/events.zig" },
 };
 
-pub fn build(b: *Builder) !void {
-    const mode = b.standardReleaseOptions();
-    try b.makePath("bin");
+pub fn build(builder: *Builder) !void {
+    const mode = builder.standardReleaseOptions();
+    try builder.makePath("build/bin");
+    builder.setInstallPrefix("build");
 
     for (examples) |example| {
-        const exe = b.addExecutable(example.output, example.input);
+        const exe = builder.addExecutable(example.output, example.input);
         exe.addPackagePath("ziglet", "src/index.zig");
         exe.setBuildMode(mode);
         exe.setTarget(builtin.arch, builtin.os, builtin.environ);
-        b.default_step.dependOn(&exe.step);
-        b.installArtifact(exe);
+        builder.default_step.dependOn(&exe.step);
+        builder.installArtifact(exe);
     }
 }

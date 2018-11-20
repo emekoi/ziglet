@@ -6,22 +6,38 @@
 
 const std = @import("std");
 
-const super = @import("index.zig");
+const ziglet = @import("index.zig");
+const util = @import("util.zig");
 
-const MouseButton = super.KeyMouseButton;
-const Key = super.Key;
+const MouseButton = ziglet.MouseButton;
+const Key = ziglet.Key;
 
-pub const Event = union {
+// [x] KeyDown: Key,
+// [x] KeyUp: Key,
+// [x] Char: u8,
+// [x] MouseDown: MouseButton,
+// [x] MouseUp: MouseButton,
+// [ ] MouseScroll: [2]f32,
+// [x] MouseMove: [2]f32,
+// [x] MouseEnter: void,
+// [x] MouseLeave: void,
+// [x] Resized: [2]i32,
+// [x] Iconified: void,
+// [x] Restored: void,
+
+pub const Event = union(enum) {
     KeyDown: Key,
     KeyUp: Key,
     Char: u8,
     MouseDown: MouseButton,
     MouseUp: MouseButton,
-    MouseScroll: [2]const i32,
-    MouseMove: [2]const i32,
-    MouseEnter,
-    MouseLeave,
-    Resized: [2]const i32,
-    Iconified,
-    Restored,
+    MouseScroll: [2]f32,
+    MouseMove: [2]f32,
+    MouseEnter: void,
+    MouseLeave: void,
+    Resized: [2]i32,
+    Iconified: void,
+    Restored: void,
 };
+
+pub const EventPump = util.RingBuffer(Event);

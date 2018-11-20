@@ -4,9 +4,13 @@
 //  under the terms of the MIT license. See LICENSE for details.
 //
 
-use @import("../native.zig");
-
 const std = @import("std");
+
+const super = @import("../index.zig");
+const native = @import("../native.zig");
+
+const HGLRC = HANDLE;
+const PROC = *@OpaqueType();
 
 const GLenum = u32;
 const GLboolean = bool;
@@ -23,7 +27,6 @@ const GLclampf = f32;
 const GLdouble = f64;
 const GLclampd = f64;
 const GLvoid = *c_void;
-
 
 // opengl function pointers
 const PFNGLARRAYELEMENTEXTPROC = ?stdcallcc fn(GLint) void;
@@ -47,6 +50,35 @@ const PFNGLGETCOLORTABLEPARAMETERFVEXTPROC = ?stdcallcc fn(GLenum, GLenum, ?*GLf
 // wgl extentions
 const PFNWGLCREATECONTEXTATTRIBSARBPROC = ?stdcallcc fn(HDC, HGLRC, ?*const c_int) HGLRC;
 const PFNWGLCHOOSEPIXELFORMATARBPROC = ?stdcallcc fn(HDC, ?*const c_int, ?*const FLOAT, UINT, ?*c_int, ?*UINT) BOOL;
+
+const PIXELFORMATDESCRIPTOR = extern struct {
+    nSize: WORD,
+    nVersion: WORD,
+    dwFlags: DWORD,
+    iPixelType: BYTE,
+    cColorBits: BYTE,
+    cRedBits: BYTE,
+    cRedShift: BYTE,
+    cGreenBits: BYTE,
+    cGreenShift: BYTE,
+    cBlueBits: BYTE,
+    cBlueShift: BYTE,
+    cAlphaBits: BYTE,
+    cAlphaShift: BYTE,
+    cAccumBits: BYTE,
+    cAccumRedBits: BYTE,
+    cAccumGreenBits: BYTE,
+    cAccumBlueBits: BYTE,
+    cAccumAlphaBits: BYTE,
+    cDepthBits: BYTE,
+    cStencilBits: BYTE,
+    cAuxBuffers: BYTE,
+    iLayerType: BYTE,
+    bReserved: BYTE,
+    dwLayerMask: DWORD,
+    dwVisibleMask: DWORD,
+    dwDamageMask: DWORD,
+};
 
 extern "gdi32" stdcallcc fn StretchDIBits(hdc: HDC, xDest: c_int, yDest: c_int, DestWidth: c_int, DestHeight: c_int,
                     xSrc: c_int, ySrc: c_int, SrcWidth: c_int, SrcHeight: c_int, lpBits: ?*const c_void,
@@ -74,28 +106,28 @@ pub const OpenGLError = error {
 pub const Context = struct {
     const Self = @This();
 
-    dummy_hRC: HGLRC,
-    dummy_hDc: HDC,
+    dummy_hRC: native.HGLRC,
+    dummy_hDc: native.HDC,
     dummy_pfd: PIXELFORMATDESCRIPTOR,
     dummy_pfdid: c_int,
-    dummy_hWnd: HWND,
+    dummy_hWnd: native.HWND,
 
     hRC: HGLRC,
-    hDc: HDC,
-    hWnd: HWND,
-    hInstace: HINSTANCE,
+    hDc: native.HDC,
+    hWnd: native.HWND,
 
-    stdcallcc fn wnd_proc(hWnd: HWND, msg: UINT, wParam: WPARAM, lParam: LPARAM) LRESULT {
-        return DefWindowProcW(hWnd, msg, wParam, lParam);
+    stdcallcc fn wnd_proc(hWnd: native.HWND, msg: native.UINT, wParam: native.WPARAM, lParam: native.LPARAM) native.LRESULT {
+        return native.DefWindowProcW(hWnd, msg, wParam, lParam);
     }
 
-    pub fn dummy_init(hInstace: HINSTANCE) !Self {
+    pub fn dummy_init(window: *const super.Window) !Self {
         var result: Self = undefined;
 
         result.dummy_hWnd = CreateWindowExW(
             CLASS_NAME.ptr,CLASS_NAME.ptr,
             WS_CLIPCHILDREN | WS_CLIPSIBLINGS,
-            0, 0, 1, 1, null, null, hInstace, null
+            0, 0, 1, 1, null, null,
+            native.GetModuleHandleW(null), null
         ) orelse return error.InitError;
 
         result.dummy_hDc = GetDC(dummy_wnd);
@@ -165,9 +197,10 @@ pub const Context = struct {
         }
     }
 
-    pub fn init(self: *Self, window: HWND) !void { 
-        self.hWnd = window;
-        
+    pub fn init(self: *Self, window: *const super.Window) !void {
+        self.hWnd = window.hWnd;
+        self.dummy_init(window);
+
         self.dummy_deinit();
 
         if (wglMakeCurrent(self.hDc, self.hRc) == FALSE) {

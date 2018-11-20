@@ -9,6 +9,7 @@ const std = @import("std");
 const mem = std.mem;
 
 pub const Key = enum(u9) {
+    Invalid          = 0,
     Space            = 32,
     Apostrophe       = 39,
     Comma            = 44,

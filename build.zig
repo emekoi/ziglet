@@ -11,6 +11,19 @@ const examples = []const Executable {
     Executable { .output = "events", .input = "examples/events.zig" },
 };
 
+fn winRes(self: *Builder, path: []const u8) !void {
+    var args = ArrayList([]const u8).init(self.allocator);
+    const cache = builder.pathFromRoot(builder.cache_root);
+    // const args = []const u8 { "windres", "-O", "coff", "-o", path, path };
+    defer args.deinit();
+    try args.appendSlice([]const u8 { "windres", "-O", "coff", "-o" });
+
+    // const output = "zig-cache"path
+
+    // try builder.spawnChild(path);
+    // builder.addObjectFile()
+}
+
 pub fn build(builder: *Builder) !void {
     const mode = builder.standardReleaseOptions();
     try builder.makePath("build/bin");

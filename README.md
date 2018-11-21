@@ -6,24 +6,12 @@ a small zig game library inspired by [sokol](https://github.com/floooh/sokol).
 * native: no dependencies at all
 
 ## TODO
-### windows
-* [ ] windowing
-* [ ] opengl backend
-* [ ] directx backend
-* [ ] keyboard input
-* [ ] mouse input
-* [ ] drawing abstractions (textures, shapes, etc.)
-### mac
-* [ ] windowing
-* [ ] opengl backend
-* [ ] metal backend
-* [ ] keyboard input
-* [ ] mouse input
-* [ ] drawing abstractions (textures, shapes, etc.)
-### linux
-* [ ] windowing
-* [ ] opengl backend
-* [ ] vulkan backend? (probably not)
-* [ ] keyboard input
-* [ ] mouse input
-* [ ] drawing abstractions (textures, shapes, etc.)
+|                      | windows | macosx  | linux   |
+|----------------------|---------|---------|---------|
+| windowing            | OK      | planned | planned |
+| event handling       | OK      | planned | planned |
+| opengl backend       | planned | planned | planned |
+| directx11 backend    | planned | N/A     | N/A     |
+| metal backend        | N/A     | planned | N/A     |
+| vulkan backend       | maybe?  | maybe?  | maybe?  |
+| graphics abstrations | planned | planned | planned |

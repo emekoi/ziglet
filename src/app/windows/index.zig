@@ -143,7 +143,6 @@ pub const Window = struct {
     iconified: bool,
 
     pub should_close: bool,
-    pub keyboard: super.Keyboard,
     pub event_pump: super.event.EventPump,
 
     fn window_resized(self: *Self) ?[2]i32 {
@@ -403,7 +402,6 @@ pub const Window = struct {
             .should_close = false,
             .mouse_tracked = false,
             .iconified = false,
-            .keyboard = super.Keyboard.new(),
             .event_pump = super.event.EventPump.init(allocator),
         };
 
@@ -435,7 +433,6 @@ pub const Window = struct {
     pub fn update(self: *Self) void {
         _ = native.SetWindowLongPtrW(self.handle, native.GWLP_USERDATA, @ptrToInt(self));
 
-        self.keyboard.update();
         self.message_loop();
     }
 };

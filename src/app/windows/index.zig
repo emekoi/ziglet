@@ -222,10 +222,9 @@ pub const Window = struct {
             native.WM_MOUSEWHEEL => {
                 if (self.mouse_tracked) {
                     const scroll = @intToFloat(f32, native.HIWORD(@truncate(u32, wParam)));
-                    std.debug.warn("@intCast(native.SHORT, wParam >> 16) == {}\n", scroll);
-                    // self.event_pump.push(Event {
-                    //     .MouseScroll = []f32 { 0.0, scroll },
-                    // }) catch unreachable;
+                    self.event_pump.push(Event {
+                        .MouseScroll = []f32 { 0.0, scroll },
+                    }) catch unreachable;
                 }
             },
             native.WM_MOUSEHWHEEL => {
@@ -286,6 +285,24 @@ pub const Window = struct {
                         .Resized = new_size,
                     }) catch unreachable;
                 }
+            },
+            native.WM_DROPFILES => {
+                const hDrop = @intToPtr(native.HDROP, wParam);
+                const count = native.DragQueryFileW(hDrop, 0xFFFFFFFF, null, 0);
+                
+                var index: c_uint = 0;
+                while (index < count) : (index += 1) {
+                    var in_buffer = []u16{0} ** (std.os.MAX_PATH_BYTES / 3 + 1);
+                    var out_buffer = []u8{0} ** (std.os.MAX_PATH_BYTES + 1);
+                    const len = native.DragQueryFileW(hDrop, index, in_buffer[0..].ptr, in_buffer.len);
+                    _ = std.unicode.utf16leToUtf8(out_buffer[0..], in_buffer[0..]) catch unreachable;
+                    // std.debug.warn("{}\n", out_buffer[0..len]);
+                    self.event_pump.push(Event {
+                        .FileDroppped = out_buffer[0..len],
+                    }) catch unreachable;
+                }
+                
+                native.DragFinish(hDrop);
             },
             else => {
                 return native.DefWindowProcW(hWnd, msg, wParam, lParam);

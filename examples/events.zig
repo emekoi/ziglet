@@ -85,6 +85,7 @@ pub fn main() !void {
                 Event.Resized => {},
                 Event.Iconified => {},
                 Event.Restored => {},
+                Event.FileDroppped => |path| std.debug.warn("FileDroppped: {}\n", path),
             }
         }
 

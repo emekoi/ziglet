@@ -323,7 +323,9 @@ pub extern "user32" stdcallcc fn AdjustWindowRectEx(lpRect: *RECT, dwStyle: DWOR
 
 pub extern "user32" stdcallcc fn TrackMouseEvent(lpEventTrack: *TRACKMOUSEEVENT) BOOL;
 
-pub extern "shell32" stdcallcc fn DragQueryFileW(hDrop: HDROP, iFile: UINT, lpszFile: LPCWSTR, cch: UINT) UINT;
+pub extern "shell32" stdcallcc fn DragQueryFileW(hDrop: HDROP, iFile: UINT, lpszFile: ?LPCWSTR, cch: UINT) UINT;
+
+pub extern "shell32" stdcallcc fn DragFinish(hDrop: HDROP) void;
 
 pub inline fn LOWORD(l: DWORD) WORD {
     return @intCast(WORD, (l & 0xffff));

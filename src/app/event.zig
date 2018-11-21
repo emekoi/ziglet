@@ -24,6 +24,7 @@ const Key = ziglet.Key;
 // [x] Resized: [2]i32,
 // [x] Iconified: void,
 // [x] Restored: void,
+// [ ] FileDroppped: []const u8,
 
 pub const Event = union(enum) {
     KeyDown: Key,
@@ -38,6 +39,7 @@ pub const Event = union(enum) {
     Resized: [2]i32,
     Iconified: void,
     Restored: void,
+    FileDroppped: []const u8,
 };
 
 pub const EventPump = util.RingBuffer(Event);

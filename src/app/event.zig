@@ -12,20 +12,6 @@ const util = @import("util.zig");
 const MouseButton = ziglet.MouseButton;
 const Key = ziglet.Key;
 
-// [x] KeyDown: Key,
-// [x] KeyUp: Key,
-// [x] Char: u8,
-// [x] MouseDown: MouseButton,
-// [x] MouseUp: MouseButton,
-// [ ] MouseScroll: [2]f32,
-// [x] MouseMove: [2]f32,
-// [x] MouseEnter: void,
-// [x] MouseLeave: void,
-// [x] Resized: [2]i32,
-// [x] Iconified: void,
-// [x] Restored: void,
-// [ ] FileDroppped: []const u8,
-
 pub const Event = union(enum) {
     KeyDown: Key,
     KeyUp: Key,

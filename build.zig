@@ -24,10 +24,8 @@ fn winRes(self: *Builder, path: []const u8) !void {
     // builder.addObjectFile()
 }
 
-pub fn build(builder: *Builder) !void {
+pub fn build(builder: *Builder) void {
     const mode = builder.standardReleaseOptions();
-    try builder.makePath("build/bin");
-    builder.setInstallPrefix("build");
 
     for (examples) |example| {
         const exe = builder.addExecutable(example.output, example.input);

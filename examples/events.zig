@@ -57,9 +57,10 @@ pub fn main() !void {
         //         Event.Resized => |size| std.debug.warn("Resized: {}, {}\n", size[0], size[1]),
         //         Event.Iconified => std.debug.warn("Iconified\n"),
         //         Event.Restored => std.debug.warn("Restored\n"),
-        //         // else => {
-        //         //     std.debug.warn("invalid event\n");
-        //         // },
+        //         Event.FileDroppped => |path| std.debug.warn("FileDroppped: {}\n", path),
+        //         else => {
+        //             std.debug.warn("invalid event\n");
+        //         },
         //     }
         // }
 
@@ -78,14 +79,14 @@ pub fn main() !void {
                 Event.Char => {},
                 Event.MouseDown => {},
                 Event.MouseUp => {},
-                Event.MouseScroll => |scroll| std.debug.warn("MouseScroll: {}, {}\n", scroll[0], scroll[1]),
+                Event.MouseScroll => {},
                 Event.MouseMove => {},
                 Event.MouseEnter => {},
                 Event.MouseLeave => {},
                 Event.Resized => {},
                 Event.Iconified => {},
                 Event.Restored => {},
-                Event.FileDroppped => |path| std.debug.warn("FileDroppped: {}\n", path),
+                Event.FileDroppped => {},
             }
         }
 

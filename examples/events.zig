@@ -34,39 +34,10 @@ pub fn main() !void {
     while (!w.should_close) {
         w.update();
 
-        // while (w.event_pump.pop()) |event| {
-        //     switch (event) {
-        //         Event.KeyDown => |key| {
-        //             std.debug.warn("KeyDown: {}\n", key);
-        //             switch (key) {
-        //                 Key.Escape => {
-        //                     w.should_close  = true;
-        //                     break;
-        //                 },
-        //                 else => continue,
-        //             }
-        //         },
-        //         Event.KeyUp => |key| std.debug.warn("KeyUp: {}\n", key),
-        //         Event.Char => |char| std.debug.warn("Char: {}\n", char),
-        //         Event.MouseDown => |btn| std.debug.warn("MouseDown: {}\n", btn),
-        //         Event.MouseUp => |btn| std.debug.warn("MouseUp: {}\n", btn),
-        //         Event.MouseScroll => |scroll| std.debug.warn("MouseScroll: {}, {}\n", scroll[0], scroll[1]),
-        //         Event.MouseMove => |coord| std.debug.warn("MouseMove: {}, {}\n", coord[0], coord[1]),
-        //         Event.MouseEnter => std.debug.warn("MouseEnter\n"),
-        //         Event.MouseLeave => std.debug.warn("MouseLeave\n"),
-        //         Event.Resized => |size| std.debug.warn("Resized: {}, {}\n", size[0], size[1]),
-        //         Event.Iconified => std.debug.warn("Iconified\n"),
-        //         Event.Restored => std.debug.warn("Restored\n"),
-        //         Event.FileDroppped => |path| std.debug.warn("FileDroppped: {}\n", path),
-        //         else => {
-        //             std.debug.warn("invalid event\n");
-        //         },
-        //     }
-        // }
-
         while (w.event_pump.pop()) |event| {
             switch (event) {
                 Event.KeyDown => |key| {
+                    std.debug.warn("KeyDown: {}\n", key);
                     switch (key) {
                         Key.Escape => {
                             w.should_close  = true;
@@ -75,18 +46,21 @@ pub fn main() !void {
                         else => continue,
                     }
                 },
-                Event.KeyUp => {},
-                Event.Char => {},
-                Event.MouseDown => {},
-                Event.MouseUp => {},
-                Event.MouseScroll => {},
-                Event.MouseMove => {},
-                Event.MouseEnter => {},
-                Event.MouseLeave => {},
-                Event.Resized => {},
-                Event.Iconified => {},
-                Event.Restored => {},
-                Event.FileDroppped => {},
+                Event.KeyUp => |key| std.debug.warn("KeyUp: {}\n", key),
+                Event.Char => |char| std.debug.warn("Char: {}\n", char),
+                Event.MouseDown => |btn| std.debug.warn("MouseDown: {}\n", btn),
+                Event.MouseUp => |btn| std.debug.warn("MouseUp: {}\n", btn),
+                Event.MouseScroll => |scroll| std.debug.warn("MouseScroll: {}, {}\n", scroll[0], scroll[1]),
+                Event.MouseMove => |coord| std.debug.warn("MouseMove: {}, {}\n", coord[0], coord[1]),
+                Event.MouseEnter => std.debug.warn("MouseEnter\n"),
+                Event.MouseLeave => std.debug.warn("MouseLeave\n"),
+                Event.Resized => |size| std.debug.warn("Resized: {}, {}\n", size[0], size[1]),
+                Event.Iconified => std.debug.warn("Iconified\n"),
+                Event.Restored => std.debug.warn("Restored\n"),
+                Event.FileDroppped => |path| std.debug.warn("FileDroppped: {}\n", path),
+                else => {
+                    std.debug.warn("invalid event\n");
+                },
             }
         }
 

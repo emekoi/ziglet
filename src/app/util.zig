@@ -15,6 +15,14 @@ pub fn L(str: []const u8) [512]u16 {
     return result;
 }
 
+pub fn clamp(comptime T: type, x: T, a: T, b: T) T {
+    const max = std.math.max(a, b);
+    const min = std.math.min(a, b);
+    // if (x > max) return max;
+    // if (x < min) return min;
+    return std.math.max(min, std.math.min(x, max));
+}
+
 fn nextPowerOf2(x: usize) usize {
     if (x == 0) return 1;
     var result = x -% 1;
@@ -40,14 +48,14 @@ pub fn AlignedRingBuffer(comptime T: type, comptime A: u29) type  {
         const Self = @This();
 
         allocator: *Allocator,
-        items: []align(A) T,
+        items: []align(A) ?T,
         write: usize,
         read: usize,
 
         pub fn init(allocator: *Allocator) Self {
             return Self {
                 .allocator = allocator,
-                .items = []align(A) T{},
+                .items = []align(A) ?T{},
                 .write = 0,
                 .read = 0,
             };
@@ -81,7 +89,7 @@ pub fn AlignedRingBuffer(comptime T: type, comptime A: u29) type  {
             if (self.full()) {
                 const new_capacity = nextPowerOf2(self.capacity() + 1);
                 self.items = try self.allocator.alignedRealloc(
-                    T, A, self.items, new_capacity
+                    ?T, A, self.items, new_capacity
                 );
             }
             self.items[self.mask(self.write)] = data;
@@ -90,8 +98,8 @@ pub fn AlignedRingBuffer(comptime T: type, comptime A: u29) type  {
 
         pub fn pop(self: *Self) ?T {
             if (!self.empty()) {
-                defer self.read += 1;
-                return self.items[self.mask(self.read)];
+                self.read += 1;
+                return self.items[self.mask(self.read - 1)];
             }
             return null;
         }

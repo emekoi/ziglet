@@ -8,6 +8,7 @@
 const std = @import("std");
 const super = @import("../index.zig");
 const util = @import("../util.zig");
+const assert = std.debug.assert;
 
 const native = @import("native.zig");
 const mem = std.mem;
@@ -123,6 +124,8 @@ fn intToKey(lParam: native.LPARAM) Key {
         0x04A => Key.KpSubtract,
         0x04E => Key.KpMultiply,
         0x11C => Key.KpEnter,
+        0x038 => Key.LeftAlt,
+        0x138 => Key.RightAlt,
         else => Key.Invalid,
     };
 }
@@ -135,8 +138,8 @@ pub const Window = struct {
     fullscreen: bool,
     borderless: bool,
     resizeable: bool,
-    width: isize,
-    height: isize,
+    width: usize,
+    height: usize,
     title: []const u8,
 
     mouse_tracked: bool,
@@ -148,12 +151,15 @@ pub const Window = struct {
     fn window_resized(self: *Self) ?[2]i32 {
         var rect: native.RECT = undefined;
         if (native.GetClientRect(self.handle, &rect) == native.TRUE) {
-            const new_width = rect.right - rect.left;
-            const new_height = rect.bottom - rect.top;
+            const new_width = @intCast(usize, rect.right - rect.left);
+            const new_height = @intCast(usize, rect.bottom - rect.top);
             if ((new_width != self.width) or (new_height != self.height)) {
                 self.width = new_width;
                 self.height = new_height;
-                return []i32 { new_width, new_height };
+                return []i32 {
+                    @intCast(i32, new_width),
+                    @intCast(i32, new_height)
+                };
             }
         } else {
             self.width = 1;
@@ -173,17 +179,20 @@ pub const Window = struct {
             native.WM_CLOSE => {
                 self.should_close = true;
             },
-            native.WM_KEYDOWN, native.WM_SYSKEYDOWN => {
+            native.WM_SYSKEYDOWN,
+            native.WM_KEYDOWN => {
                 self.event_pump.push(Event {
                     .KeyDown = intToKey(lParam >> 16)
                 }) catch unreachable;
             },
-            native.WM_KEYUP, native.WM_SYSKEYUP => {
+            native.WM_SYSKEYUP,
+            native.WM_KEYUP => {
                 self.event_pump.push(Event {
                     .KeyUp = intToKey(lParam >> 16)
                 }) catch unreachable;
             },
-            native.WM_CHAR, native.WM_SYSCHAR => {
+            native.WM_SYSCHAR,
+            native.WM_CHAR => {
                 self.event_pump.push(Event {
                     .Char = @intCast(u8, wParam)
                 }) catch unreachable;
@@ -235,25 +244,22 @@ pub const Window = struct {
                 }
             },
             native.WM_MOUSEMOVE => {
-                const mouse = []f32 {
-                    @bitCast(f32, native.GET_X_LPARAM(lParam)),
-                    @bitCast(f32, native.GET_Y_LPARAM(lParam)),
-                };
-
                 if (!self.mouse_tracked) {
                     self.mouse_tracked = true;
                     var tme: native.TRACKMOUSEEVENT = undefined;
                     tme.cbSize = @sizeOf(native.TRACKMOUSEEVENT);
                     tme.dwFlags = native.TME_LEAVE;
                     tme.hwndTrack = self.handle;
-                    _ = native.TrackMouseEvent(&tme);
+                    assert(native.TrackMouseEvent(&tme) != 0);
                     self.event_pump.push(Event {
                         .MouseEnter = {},
                     }) catch unreachable;
                 }
-                
                 self.event_pump.push(Event {
-                    .MouseMove = mouse,
+                    .MouseMove = []f32 {
+                        @bitCast(f32, native.GET_X_LPARAM(lParam)),
+                        @bitCast(f32, native.GET_Y_LPARAM(lParam)),
+                    },
                 }) catch unreachable;
             },
             native.WM_MOUSELEAVE => {
@@ -332,9 +338,9 @@ pub const Window = struct {
 
         var rect = native.RECT {
             .left = 0,
-            .right = @truncate(c_int, options.width),
+            .right = @truncate(c_int, @intCast(isize, options.width)),
             .top = 0,
-            .bottom = @truncate(c_int, options.height),
+            .bottom = @truncate(c_int, @intCast(isize, options.height)),
         };
 
         var dwExStyle: u32 = 0;

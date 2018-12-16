@@ -22,8 +22,8 @@ pub const WindowOptions = struct {
     fullscreen: bool,
     borderless: bool,
     resizeable: bool,
-    width: i32,
-    height: i32,
+    width: usize,
+    height: usize,
     title: []const u8,
 };
 

@@ -26,17 +26,9 @@ const Header = struct {
         var result: Self = undefined;
 
         result.buffer = try Buffer(u8).initSize(player.allocator, buf_size);
-
-        result.wavehdr = winnm.WaveHdr {
-            .lpData = result.buffer.ptr(),
-            .dwBufferLength = @intCast(windows.DWORD, buf_size),
-            .dwBytesRecorded = undefined,
-            .dwUser = undefined,
-            .dwFlags = 0,
-            .dwLoops = undefined,
-            .lpNext = undefined,
-            .reserved = undefined,
-        };
+        result.wavehdr.dwBufferLength = @intCast(windows.DWORD, buf_size);
+        result.wavehdr.lpData = result.buffer.ptr();
+        result.wavehdr.dwFlags = 0;
         
         try winnm.waveOutPrepareHeader(
             player.handle, &result.wavehdr,
@@ -77,7 +69,7 @@ pub const Player = struct {
     allocator: *Allocator,
     handle: windows.HANDLE,
     headers: [BUF_COUNT]Header,
-    tmp: Buffer(u8),
+    buffer    
     buf_size: usize,
 
     pub fn new(allocator: *Allocator, sample_rate: usize, mode: AudioMode, buf_size: usize) Error!Self {

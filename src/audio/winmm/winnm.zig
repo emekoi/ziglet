@@ -10,6 +10,7 @@ pub const WAVE_FORMAT_PCM = 0x01;
 pub const WHDR_INQUEUE = 0x10;
 pub const WAVE_MAPPER = 0xffffffff;
 pub const CALLBACK_NULL = 0x0;
+pub const HWAVEOUT = windows.HANDLE;
 
 pub const UINT_PTR = usize;
 

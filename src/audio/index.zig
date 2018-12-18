@@ -8,6 +8,8 @@ const std = @import("std");
 const builtin = @import("builtin");
 const time = std.os.time;
 
+const winmm = @import("winmm/index.zig");
+
 pub const Backend = enum {
     Wasapi,
     Winmm,
@@ -16,9 +18,8 @@ pub const Backend = enum {
     Null,
 };
 
-const sys = switch (builtin.os) {
-    builtin.Os.windows => @import("windows/index.zig"),
-    else => @panic("unsupported OS"),
+pub const PlayerError = error {
+
 };
 
 pub const AudioMode = union(enum) {
@@ -37,20 +38,6 @@ pub const AudioMode = union(enum) {
 
 pub const Player = struct {
     const Self = @This();
-
-    pub const Error = sys.Player.Error;
-
-    pub const OutStream = struct {
-        player: *Player,
-        stream: Stream,
-        
-        pub const Stream = std.io.OutStream(Error);
-
-        fn writeFn(out_stream: *Stream, bytes: []const u8) Error!void {
-            const self = @fieldParentPtr(OutStream, "stream", out_stream);
-            return self.player.write(bytes);
-        }
-    };
 
     player: sys.Player,
     pub sample_rate: usize,
@@ -92,13 +79,6 @@ pub const Player = struct {
     pub fn close(self: *Self) !void {
         time.sleep(time.ns_per_s * self.buf_size / self.bytes_per_sec());
         try self.player.close();
-    }
-
-    pub fn outStream(self: *Player) OutStream {
-        return OutStream {
-            .player = self,
-            .stream = OutStream.Stream { .writeFn = OutStream.writeFn }
-        };
     }
 };
 

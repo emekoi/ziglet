@@ -16,11 +16,7 @@ pub fn L(str: []const u8) [512]u16 {
 }
 
 pub fn clamp(comptime T: type, x: T, a: T, b: T) T {
-    const max = std.math.max(a, b);
-    const min = std.math.min(a, b);
-    // if (x > max) return max;
-    // if (x < min) return min;
-    return std.math.max(min, std.math.min(x, max));
+    return std.math.max(std.math.min(a, b), std.math.min(x, std.math.max(a, b)));
 }
 
 fn nextPowerOf2(x: usize) usize {

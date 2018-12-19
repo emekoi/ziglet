@@ -13,8 +13,6 @@ const winmm = @import("winmm/index.zig");
 pub const Backend = enum {
     Wasapi,
     Winmm,
-    CoreAudio,
-    Alsa,
     Null,
 };
 
@@ -82,27 +80,27 @@ pub const Player = struct {
     }
 };
 
-test "Player -- raw audio" {
-    var direct_allocator = std.heap.DirectAllocator.init();
-    const alloc = &direct_allocator.allocator;
-    defer direct_allocator.deinit();
+// test "Player -- raw audio" {
+//     var direct_allocator = std.heap.DirectAllocator.init();
+//     const alloc = &direct_allocator.allocator;
+//     defer direct_allocator.deinit();
     
-    const mode = AudioMode { .Stereo = 2 };
-    var player = try Player.new(alloc, 44100, mode, 2048);
-    var stream = player.outStream().stream;
+//     const mode = AudioMode { .Stereo = 2 };
+//     var player = try Player.new(alloc, 44100, mode, 2048);
+//     var stream = player.outStream().stream;
 
-    var timer = try time.Timer.start();
-    const duration = time.ns_per_s * 5;
-    const dt = 1.0 / @intToFloat(f32, player.sample_rate);
+//     var timer = try time.Timer.start();
+//     const duration = time.ns_per_s * 5;
+//     const dt = 1.0 / @intToFloat(f32, player.sample_rate);
 
-    while (timer.read() < duration) {
-        try player.write([]u8{127}**2048);
-        // var i: usize = 0;
-        // while (i < player.buf_size) : (i += 1) {
-        //     const p = @intToFloat(f32, i) / @intToFloat(f32, player.buf_size);
-        //     const out = std.math.sin(p * 2.0 * std.math.pi);
-        //     try stream.writeByte(@floatToInt(u8, out));
-        //     try stream.writeByte(@floatToInt(u8, out));
-        // }
-    }
-}
+//     while (timer.read() < duration) {
+//         try player.write([]u8{127}**2048);
+//         // var i: usize = 0;
+//         // while (i < player.buf_size) : (i += 1) {
+//         //     const p = @intToFloat(f32, i) / @intToFloat(f32, player.buf_size);
+//         //     const out = std.math.sin(p * 2.0 * std.math.pi);
+//         //     try stream.writeByte(@floatToInt(u8, out));
+//         //     try stream.writeByte(@floatToInt(u8, out));
+//         // }
+//     }
+// }

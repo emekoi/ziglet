@@ -57,18 +57,18 @@ pub const MMRESULT = extern enum(u32) {
     }
 };
 
-pub const WaveHdr = extern struct {
+pub const WAVEHDR = extern struct {
     lpData: windows.LPSTR,
     dwBufferLength: windows.DWORD,
     dwBytesRecorded: windows.DWORD,
     dwUser: windows.DWORD_PTR,
     dwFlags: windows.DWORD,
     dwLoops: windows.DWORD,
-    lpNext: ?*WaveHdr,
+    lpNext: ?*WAVEHDR,
     reserved: windows.DWORD_PTR,
 };
 
-pub const WaveFormatEx = extern struct {
+pub const WAVEFORMATEX = extern struct {
     wFormatTag: windows.WORD,
     nChannels: windows.WORD,
     nSamplesPerSec: windows.DWORD,
@@ -78,15 +78,14 @@ pub const WaveFormatEx = extern struct {
     cbSize: windows.WORD,
 };
 
-
-pub extern "winmm" stdcallcc fn waveOutOpen(phwo: *windows.HANDLE, uDeviceID: UINT_PTR,
-    pwfx: *const WaveFormatEx, dwCallback: windows.DWORD_PTR,
+pub extern "winmm" stdcallcc fn waveOutOpen(phwo: *HWAVEOUT, uDeviceID: UINT_PTR,
+    pwfx: *const WAVEFORMATEX, dwCallback: windows.DWORD_PTR,
     dwCallbackInstance: windows.DWORD_PTR, fdwOpen: windows.DWORD) MMRESULT;
 
-pub extern "winmm" stdcallcc fn waveOutClose(hwo: windows.HANDLE) MMRESULT;
+pub extern "winmm" stdcallcc fn waveOutClose(hwo: HWAVEOUT) MMRESULT;
 
-pub extern "winmm" stdcallcc fn waveOutPrepareHeader(hwo: windows.HANDLE, pwh: *WaveHdr, cbwh: windows.UINT) MMRESULT;
+pub extern "winmm" stdcallcc fn waveOutPrepareHeader(hwo: HWAVEOUT, pwh: *WAVEHDR, cbwh: windows.UINT) MMRESULT;
 
-pub extern "winmm" stdcallcc fn waveOutUnprepareHeader(hwo: windows.HANDLE, pwh: *WaveHdr, cbwh: windows.UINT) MMRESULT;
+pub extern "winmm" stdcallcc fn waveOutUnprepareHeader(hwo: HWAVEOUT, pwh: *WAVEHDR, cbwh: windows.UINT) MMRESULT;
 
-pub extern "winmm" stdcallcc fn waveOutWrite(hwo: windows.HANDLE, pwh: *WaveHdr, cbwh: windows.UINT) MMRESULT;
+pub extern "winmm" stdcallcc fn waveOutWrite(hwo: HWAVEOUT, pwh: *WAVEHDR, cbwh: windows.UINT) MMRESULT;

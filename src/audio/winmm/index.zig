@@ -19,26 +19,29 @@ const Header = struct {
         InvalidLength,
     };
 
-    buffer: Buffer(u8),
-    wavehdr: winnm.WaveHdr,
+    buffer: Buffer(i16),
+    wave_out: HWAVEOUT,
+    wave_hdr: winnm.WAVEHDR,
 
-    pub fn new(player: Player, buf_size: usize) !Self {
+    pub fn new(player: *Player, buf_size: usize) !Self {
         var result: Self = undefined;
 
-        result.buffer = try Buffer(u8).initSize(player.allocator, buf_size);
-        result.wavehdr.dwBufferLength = @intCast(windows.DWORD, buf_size);
-        result.wavehdr.lpData = result.buffer.ptr();
-        result.wavehdr.dwFlags = 0;
+        result.buffer = try Buffer(i16).initSize(player.allocator, buf_size);
+        result.wave_out = player.wave_out;
+
+        result.wave_hdr.dwBufferLength = @intCast(windows.DWORD, buf_size);
+        result.wave_hdr.lpData = result.buffer.ptr();
+        result.wave_hdr.dwFlags = 0;
         
         try winnm.waveOutPrepareHeader(
-            player.handle, &result.wavehdr,
-           @sizeOf(winnm.WaveHdr)
+            result.wave_out, &result.wave_hdr,
+            @sizeOf(winnm.WAVEHDR)
         ).toError();
         
         return result;
     }
 
-    pub fn write(self: *Self, player: *const Player, data: []const u8) !void {
+    pub fn write(self: *Self, data: []const i16) !void {
         if (data.len != self.buffer.len()) {
             return error.InvalidLength;
         }
@@ -46,33 +49,29 @@ const Header = struct {
         try self.buffer.replaceContents(data);
 
         try winnm.waveOutWrite(
-            player.handle, &self.wavehdr,
+            self.wave_out, &self.wave_hdr,
             @intCast(windows.UINT, self.buffer.len())
         ).toError();
     }
 
-    pub fn destroy(self: *Self, player: Player) !void {
+    pub fn destroy(self: *Self) !void {
         try winnm.waveOutUnprepareHeader(
-            player.handle, &self.wavehdr,
-            @sizeOf(winnm.WaveHdr)
+            sefl.wave_out, &self.wave_hdr,
+            @sizeOf(winnm.WAVEHDR)
         ).toError();
         self.buffer.deinit();
     }
 };
 
-pub const Player = struct {
-    const Self = @This();
+pub const Backend = struct {
     const BUF_COUNT = 2;
 
-    pub const Error = Header.Error || Allocator.Error || winnm.MMError;
-
     allocator: *Allocator,
-    handle: windows.HANDLE,
+    wave_out: winnm.HWAVEOUT,
     headers: [BUF_COUNT]Header,
-    buffer    
-    buf_size: usize,
+    buffer: Buffer(f32),
 
-    pub fn new(allocator: *Allocator, sample_rate: usize, mode: AudioMode, buf_size: usize) Error!Self {
+    pub fn init(allocator: *Allocator, sample_rate: usize, mode: AudioMode, buf_size: usize) Error!Self {
         var result: Self = undefined;
         var handle: windows.HANDLE = undefined;
 
@@ -83,7 +82,7 @@ pub const Player = struct {
 
         const block_align = bps * mode.channelCount();
 
-        const format = winnm.WaveFormatEx {
+        const format = winnm.WAVEFORMATEX {
             .wFormatTag = winnm.WAVE_FORMAT_PCM,
             .nChannels = @intCast(windows.WORD, mode.channelCount()),
             .nSamplesPerSec = @intCast(windows.DWORD, sample_rate),
@@ -133,10 +132,13 @@ pub const Player = struct {
     }
 
     pub fn close(self: *Self) Error!void {
+        try winmm.waveOutReset(self.wave_out).toError();
+
         for (self.headers) |*header| {
-            try header.destroy(self.handle);
+            try header.destroy();
         }
+
         try winnm.waveOutClose(self.handle).toError();
-        self.tmp.deinit();
+        self.buffer.deinit();
     }
 };

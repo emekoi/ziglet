@@ -103,8 +103,6 @@ pub const OpenGLError = error {
 };
 
 pub const Context = struct {
-    const Self = @This();
-
     dummy_hRC: native.HGLRC,
     dummy_hDc: native.HDC,
     dummy_pfd: PIXELFORMATDESCRIPTOR,
@@ -119,8 +117,8 @@ pub const Context = struct {
         return native.DefWindowProcW(hWnd, msg, wParam, lParam);
     }
 
-    pub fn dummy_init(window: *const super.Window) !Self {
-        var result: Self = undefined;
+    pub fn dummy_init(window: *const super.Window) !Context {
+        var result: Context = undefined;
 
         result.dummy_hWnd = CreateWindowExW(
             CLASS_NAME.ptr,CLASS_NAME.ptr,
@@ -181,7 +179,7 @@ pub const Context = struct {
         return result;
     }
 
-    fn dummy_deinit(self: Self) !void {
+    fn dummy_deinit(self: Context) !void {
         if (wglMakeCurrent(null, null) == FALSE) {
             return error.InitError;
         }
@@ -196,7 +194,7 @@ pub const Context = struct {
         }
     }
 
-    pub fn init(self: *Self, window: *const super.Window) !void {
+    pub fn init(self: *Context, window: *const super.Window) !void {
         self.hWnd = window.hWnd;
         self.dummy_init(window);
 
@@ -207,7 +205,7 @@ pub const Context = struct {
         }
     }
 
-    pub fn deinit(self: Self) !void {
+    pub fn deinit(self: Context) !void {
         if (wglMakeCurrent(null, null) == FALSE) {
             return error.ShutdownError;
         }

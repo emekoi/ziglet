@@ -130,8 +130,6 @@ fn intToKey(lParam: native.LPARAM) Key {
 }
 
 pub const Window = struct {
-    const Self = @This();
-
     handle: native.HWND,
 
     fullscreen: bool,
@@ -147,7 +145,7 @@ pub const Window = struct {
     pub should_close: bool,
     pub event_pump: ziglet.app.event.EventPump,
 
-    fn window_resized(self: *Self) ?[2]i32 {
+    fn window_resized(self: *Window) ?[2]i32 {
         var rect: native.RECT = undefined;
         if (native.GetClientRect(self.handle, &rect) == native.TRUE) {
             const new_width = @intCast(usize, rect.right - rect.left);
@@ -170,7 +168,7 @@ pub const Window = struct {
     stdcallcc fn wnd_proc(hWnd: native.HWND, msg: native.UINT, wParam: native.WPARAM, lParam: native.LPARAM) native.LRESULT {
         var result: native.LRESULT = 0;
 
-        var self = @intToPtr(?*Self, native.GetWindowLongPtrW(hWnd, native.GWLP_USERDATA)) orelse {
+        var self = @intToPtr(?*Window, native.GetWindowLongPtrW(hWnd, native.GWLP_USERDATA)) orelse {
             return native.DefWindowProcW(hWnd, msg, wParam, lParam);
         };
 
@@ -392,8 +390,16 @@ pub const Window = struct {
         return result;
     }
 
+<<<<<<< HEAD
     pub fn init(allocator: *mem.Allocator, options: ziglet.app.WindowOptions) ziglet.app.WindowError!Self {
         var result = Self {
+||||||| merged common ancestors
+    pub fn init(allocator: *mem.Allocator, options: super.WindowOptions) super.WindowError!Self {
+        var result = Self {
+=======
+    pub fn init(allocator: *mem.Allocator, options: super.WindowOptions) super.WindowError!Window {
+        var result = Window {
+>>>>>>> removed Self variables
             .handle = undefined,
             .fullscreen = options.fullscreen,
             .borderless = options.borderless,
@@ -414,7 +420,7 @@ pub const Window = struct {
         return result;
     }
 
-    pub fn deinit(self: Self) void {
+    pub fn deinit(self: Window) void {
         if (self.fullscreen) {
             _ = native.ChangeDisplaySettingsW(null, 0);
             _ = native.ShowCursor(native.TRUE);
@@ -422,7 +428,7 @@ pub const Window = struct {
         _ = native.UnregisterClassW(util.L(self.title)[0..].ptr, native.GetModuleHandleW(null));
     }
 
-    fn message_loop(self: *const Self) void {
+    fn message_loop(self: *const Window) void {
         var msg: native.MSG = undefined;
 
         while (native.PeekMessageW(&msg, self.handle, 0, 0, native.PM_REMOVE) == native.TRUE) {
@@ -432,7 +438,7 @@ pub const Window = struct {
         }
     }
 
-    pub fn update(self: *Self) void {
+    pub fn update(self: *Window) void {
         _ = native.SetWindowLongPtrW(self.handle, native.GWLP_USERDATA, @ptrToInt(self));
 
         self.message_loop();

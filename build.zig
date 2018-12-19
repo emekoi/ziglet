@@ -24,15 +24,17 @@ fn winRes(self: *Builder, path: []const u8) !void {
     // builder.addObjectFile()
 }
 
+
 pub fn build(builder: *Builder) void {
     const mode = builder.standardReleaseOptions();
 
     for (examples) |example| {
         const exe = builder.addExecutable(example.output, example.input);
+        // exe.addPackagePath("lib/slotmap", "lib/slotmap.zig/index.zig");
         exe.addPackagePath("ziglet", "src/index.zig");
-        exe.setBuildMode(mode);
         exe.setTarget(builtin.arch, builtin.os, builtin.environ);
+        exe.setBuildMode(mode);
+
         builder.default_step.dependOn(&exe.step);
-        builder.installArtifact(exe);
     }
 }

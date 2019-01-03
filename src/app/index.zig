@@ -5,20 +5,14 @@
 //
 
 const builtin = @import("builtin");
-const Os = builtin.Os;
-
-pub const keyboard = @import("keyboard.zig");
-pub const mouse = @import("mouse.zig");
 pub const event = @import("event.zig");
+const ziglet = @import("../index.zig");
 
-pub const RenderBackend = enum {
-    OpenGL,
-    DirectX11,
-    Metal,
-};
+const Os = builtin.Os;
+const gfx = ziglet.gfx;
 
 pub const WindowOptions = struct {
-    backend: RenderBackend,
+    backend: gfx.RenderBackend,
     fullscreen: bool,
     borderless: bool,
     resizeable: bool,

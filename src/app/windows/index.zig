@@ -6,19 +6,18 @@
 
 
 const std = @import("std");
-const super = @import("../index.zig");
+const ziglet = @import("../../index.zig");
 const util = @import("../util.zig");
 const assert = std.debug.assert;
 
 const native = @import("native.zig");
 const mem = std.mem;
 
-pub const Event = super.event.Event;
-pub const Key = super.keyboard.Key;
-pub const Keyboard = super.keyboard.Keyboard;
-pub const MouseButton = super.mouse.MouseButton;
+pub const Event = ziglet.app.event.Event;
+pub const Key = ziglet.app.event.Key;
+pub const MouseButton = ziglet.app.event.MouseButton;
 
-const Backend = union(super.RenderBackend) {
+const Backend = union(ziglet.gfx.RenderBackend) {
     OpenGL: @import("backend/opengl.zig").Context,
     DirectX11: @import("backend/directx.zig").Context,
 };
@@ -126,7 +125,7 @@ fn intToKey(lParam: native.LPARAM) Key {
         0x11C => Key.KpEnter,
         0x038 => Key.LeftAlt,
         0x138 => Key.RightAlt,
-        else => Key.Invalid,
+        else => Key.Unknown,
     };
 }
 
@@ -146,7 +145,7 @@ pub const Window = struct {
     iconified: bool,
 
     pub should_close: bool,
-    pub event_pump: super.event.EventPump,
+    pub event_pump: ziglet.app.event.EventPump,
 
     fn window_resized(self: *Self) ?[2]i32 {
         var rect: native.RECT = undefined;
@@ -289,23 +288,23 @@ pub const Window = struct {
                     }) catch unreachable;
                 }
             },
-            native.WM_DROPFILES => {
-                const hDrop = @intToPtr(native.HDROP, wParam);
-                const count = native.DragQueryFileW(hDrop, 0xFFFFFFFF, null, 0);
+            // native.WM_DROPFILES => {
+            //     const hDrop = @intToPtr(native.HDROP, wParam);
+            //     const count = native.DragQueryFileW(hDrop, 0xFFFFFFFF, null, 0);
                 
-                var index: c_uint = 0;
-                while (index < count) : (index += 1) {
-                    var in_buffer = []u16{0} ** (std.os.MAX_PATH_BYTES / 3 + 1);
-                    var out_buffer = []u8{0} ** (std.os.MAX_PATH_BYTES + 1);
-                    const len = native.DragQueryFileW(hDrop, index, in_buffer[0..].ptr, in_buffer.len);
-                    _ = std.unicode.utf16leToUtf8(out_buffer[0..], in_buffer[0..]) catch unreachable;
-                    self.event_pump.push(Event {
-                        .FileDroppped = out_buffer[0..len],
-                    }) catch unreachable;
-                }
+            //     var index: c_uint = 0;
+            //     while (index < count) : (index += 1) {
+            //         var in_buffer = []u16{0} ** (std.os.MAX_PATH_BYTES / 3 + 1);
+            //         var out_buffer = []u8{0} ** (std.os.MAX_PATH_BYTES + 1);
+            //         const len = native.DragQueryFileW(hDrop, index, in_buffer[0..].ptr, in_buffer.len);
+            //         _ = std.unicode.utf16leToUtf8(out_buffer[0..], in_buffer[0..]) catch unreachable;
+            //         self.event_pump.push(Event {
+            //             .FileDroppped = out_buffer[0..len],
+            //         }) catch unreachable;
+            //     }
                 
-                native.DragFinish(hDrop);
-            },
+            //     native.DragFinish(hDrop);
+            // },
             else => {
                 return native.DefWindowProcW(hWnd, msg, wParam, lParam);
             }
@@ -314,7 +313,7 @@ pub const Window = struct {
         return result;
     }
 
-    fn open_window(options: super.WindowOptions) super.WindowError!native.HWND {
+    fn open_window(options: ziglet.app.WindowOptions) ziglet.app.WindowError!native.HWND {
         const wtitle = util.L(options.title)[0..];
 
         const wcex = native.WNDCLASSEX {
@@ -393,7 +392,7 @@ pub const Window = struct {
         return result;
     }
 
-    pub fn init(allocator: *mem.Allocator, options: super.WindowOptions) super.WindowError!Self {
+    pub fn init(allocator: *mem.Allocator, options: ziglet.app.WindowOptions) ziglet.app.WindowError!Self {
         var result = Self {
             .handle = undefined,
             .fullscreen = options.fullscreen,
@@ -405,7 +404,7 @@ pub const Window = struct {
             .should_close = false,
             .mouse_tracked = false,
             .iconified = false,
-            .event_pump = super.event.EventPump.init(allocator),
+            .event_pump = ziglet.app.event.EventPump.init(allocator),
         };
 
         errdefer result.deinit();

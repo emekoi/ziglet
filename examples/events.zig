@@ -9,9 +9,11 @@
 const std = @import("std");
 const ziglet = @import("ziglet");
 
-const Key = ziglet.app.Key;
-const Event = ziglet.app.event.Event;
-const Window = ziglet.app.Window;
+const app = ziglet.app;
+
+const Key = app.event.Key;
+const Event = app.event.Event;
+const Window = app.Window;
 
 pub fn main() !void {
     var direct_allocator = std.heap.DirectAllocator.init();
@@ -19,7 +21,7 @@ pub fn main() !void {
     defer direct_allocator.deinit();
     
     const opts = ziglet.app.WindowOptions {
-        .backend = ziglet.app.RenderBackend.OpenGL,
+        .backend = ziglet.gfx.RenderBackend.OpenGL,
         .fullscreen = false,
         .borderless = false,
         .resizeable = true,
@@ -57,7 +59,7 @@ pub fn main() !void {
                 Event.Resized => |size| std.debug.warn("Resized: {}, {}\n", size[0], size[1]),
                 Event.Iconified => std.debug.warn("Iconified\n"),
                 Event.Restored => std.debug.warn("Restored\n"),
-                Event.FileDroppped => |path| std.debug.warn("FileDroppped: {}\n", path),
+                // Event.FileDroppped => |path| std.debug.warn("FileDroppped: {}\n", path),
                 else => {
                     std.debug.warn("invalid event\n");
                 },

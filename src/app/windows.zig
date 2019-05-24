@@ -4,13 +4,12 @@
 //  under the terms of the MIT license. See LICENSE for details.
 //
 
-
 const std = @import("std");
-const ziglet = @import("../../index.zig");
-const util = @import("../util.zig");
+const ziglet = @import("../ziglet.zig");
+const util = @import("util.zig");
 const assert = std.debug.assert;
 
-const native = @import("native.zig");
+const native = @import("windows/native.zig");
 const mem = std.mem;
 
 pub const Event = ziglet.app.event.Event;
@@ -153,9 +152,9 @@ pub const Window = struct {
             if ((new_width != self.width) or (new_height != self.height)) {
                 self.width = new_width;
                 self.height = new_height;
-                return []i32 {
+                return []i32{
                     @intCast(i32, new_width),
-                    @intCast(i32, new_height)
+                    @intCast(i32, new_height),
                 };
             }
         } else {
@@ -176,67 +175,50 @@ pub const Window = struct {
             native.WM_CLOSE => {
                 self.should_close = true;
             },
-            native.WM_SYSKEYDOWN,
-            native.WM_KEYDOWN => {
-                self.event_pump.push(Event {
-                    .KeyDown = intToKey(lParam >> 16)
-                }) catch unreachable;
+            native.WM_SYSKEYDOWN, native.WM_KEYDOWN => {
+                self.event_pump.push(Event{ .KeyDown = intToKey(lParam >> 16) }) catch unreachable;
             },
-            native.WM_SYSKEYUP,
-            native.WM_KEYUP => {
-                self.event_pump.push(Event {
-                    .KeyUp = intToKey(lParam >> 16)
-                }) catch unreachable;
+            native.WM_SYSKEYUP, native.WM_KEYUP => {
+                self.event_pump.push(Event{ .KeyUp = intToKey(lParam >> 16) }) catch unreachable;
             },
-            native.WM_SYSCHAR,
-            native.WM_CHAR => {
-                self.event_pump.push(Event {
-                    .Char = @intCast(u8, wParam)
-                }) catch unreachable;
+            native.WM_SYSCHAR, native.WM_CHAR => {
+                self.event_pump.push(Event{ .Char = @intCast(u8, wParam) }) catch unreachable;
             },
             native.WM_LBUTTONDOWN => {
-                self.event_pump.push(Event {
-                    .MouseDown = MouseButton.Left
-                }) catch unreachable;
+                self.event_pump.push(Event{ .MouseDown = MouseButton.Left }) catch unreachable;
             },
             native.WM_RBUTTONDOWN => {
-                self.event_pump.push(Event {
-                    .MouseDown = MouseButton.Right
-                }) catch unreachable;
+                self.event_pump.push(Event{ .MouseDown = MouseButton.Right }) catch unreachable;
             },
             native.WM_MBUTTONDOWN => {
-                self.event_pump.push(Event {
+                self.event_pump.push(Event{
                     .MouseDown = MouseButton.Middle,
                 }) catch unreachable;
             },
             native.WM_LBUTTONUP => {
-                self.event_pump.push(Event {
-                    .MouseUp = MouseButton.Left
-                }) catch unreachable;
+                self.event_pump.push(Event{ .MouseUp = MouseButton.Left }) catch unreachable;
             },
             native.WM_RBUTTONUP => {
-                self.event_pump.push(Event {
-                    .MouseUp = MouseButton.Right
-                }) catch unreachable;
+                self.event_pump.push(Event{ .MouseUp = MouseButton.Right }) catch unreachable;
             },
             native.WM_MBUTTONUP => {
-                self.event_pump.push(Event {
+                self.event_pump.push(Event{
                     .MouseUp = MouseButton.Middle,
                 }) catch unreachable;
             },
             native.WM_MOUSEWHEEL => {
                 if (self.mouse_tracked) {
                     const scroll = @intToFloat(f32, @intCast(i16, @truncate(u16, (@truncate(u32, wParam) >> 16) & 0xffff))) * 0.1;
-                    self.event_pump.push(Event {
-                        .MouseScroll = []f32 { 0.0, scroll },
+                    self.event_pump.push(Event{
+                        .MouseScroll = []f32{ 0.0, scroll },
                     }) catch unreachable;
                 }
             },
             native.WM_MOUSEHWHEEL => {
                 if (self.mouse_tracked) {
                     const scroll = @intToFloat(f32, @intCast(i16, @truncate(u16, (@truncate(u32, wParam) >> 16) & 0xffff))) * 0.1;
-                    self.event_pump.push(Event {
-                        .MouseScroll = []f32 { scroll, 0.0 },
+                    self.event_pump.push(Event{
+                        .MouseScroll = []f32{ scroll, 0.0 },
                     }) catch unreachable;
                 }
             },
@@ -248,12 +230,12 @@ pub const Window = struct {
                     tme.dwFlags = native.TME_LEAVE;
                     tme.hwndTrack = self.handle;
                     assert(native.TrackMouseEvent(&tme) != 0);
-                    self.event_pump.push(Event {
+                    self.event_pump.push(Event{
                         .MouseEnter = {},
                     }) catch unreachable;
                 }
-                self.event_pump.push(Event {
-                    .MouseMove = []f32 {
+                self.event_pump.push(Event{
+                    .MouseMove = []f32{
                         @bitCast(f32, native.GET_X_LPARAM(lParam)),
                         @bitCast(f32, native.GET_Y_LPARAM(lParam)),
                     },
@@ -261,7 +243,7 @@ pub const Window = struct {
             },
             native.WM_MOUSELEAVE => {
                 self.mouse_tracked = false;
-                self.event_pump.push(Event {
+                self.event_pump.push(Event{
                     .MouseLeave = {},
                 }) catch unreachable;
             },
@@ -270,18 +252,17 @@ pub const Window = struct {
                 if (iconified != self.iconified) {
                     self.iconified = iconified;
                     if (iconified) {
-                        self.event_pump.push(Event {
+                        self.event_pump.push(Event{
                             .Iconified = {},
                         }) catch unreachable;
-                    }
-                    else {
-                        self.event_pump.push(Event {
+                    } else {
+                        self.event_pump.push(Event{
                             .Restored = {},
                         }) catch unreachable;
                     }
                 }
                 if (self.window_resized()) |new_size| {
-                    self.event_pump.push(Event {
+                    self.event_pump.push(Event{
                         .Resized = new_size,
                     }) catch unreachable;
                 }
@@ -289,7 +270,7 @@ pub const Window = struct {
             // native.WM_DROPFILES => {
             //     const hDrop = @intToPtr(native.HDROP, wParam);
             //     const count = native.DragQueryFileW(hDrop, 0xFFFFFFFF, null, 0);
-                
+
             //     var index: c_uint = 0;
             //     while (index < count) : (index += 1) {
             //         var in_buffer = []u16{0} ** (std.os.MAX_PATH_BYTES / 3 + 1);
@@ -300,12 +281,12 @@ pub const Window = struct {
             //             .FileDroppped = out_buffer[0..len],
             //         }) catch unreachable;
             //     }
-                
+
             //     native.DragFinish(hDrop);
             // },
             else => {
                 return native.DefWindowProcW(hWnd, msg, wParam, lParam);
-            }
+            },
         }
 
         return result;
@@ -314,7 +295,7 @@ pub const Window = struct {
     fn open_window(options: ziglet.app.WindowOptions) ziglet.app.WindowError!native.HWND {
         const wtitle = util.L(options.title)[0..];
 
-        const wcex = native.WNDCLASSEX {
+        const wcex = native.WNDCLASSEX{
             .cbSize = @sizeOf(native.WNDCLASSEX),
             .style = native.CS_HREDRAW | native.CS_VREDRAW | native.CS_OWNDC,
             .lpfnWndProc = wnd_proc,
@@ -333,7 +314,7 @@ pub const Window = struct {
             return error.InitError;
         }
 
-        var rect = native.RECT {
+        var rect = native.RECT{
             .left = 0,
             .right = @truncate(c_int, @intCast(isize, options.width)),
             .top = 0,
@@ -380,26 +361,14 @@ pub const Window = struct {
         rect.right -= rect.left;
         rect.bottom -= rect.top;
 
-        const result = native.CreateWindowExW(dwExStyle,
-            wtitle.ptr, wtitle.ptr, dwStyle,
-            native.CW_USEDEFAULT, native.CW_USEDEFAULT, rect.right, rect.bottom,
-            null, null, wcex.hInstance, null
-        ) orelse return error.InitError;
+        const result = native.CreateWindowExW(dwExStyle, wtitle.ptr, wtitle.ptr, dwStyle, native.CW_USEDEFAULT, native.CW_USEDEFAULT, rect.right, rect.bottom, null, null, wcex.hInstance, null) orelse return error.InitError;
         _ = native.ShowWindow(result, native.SW_NORMAL);
 
         return result;
     }
 
-<<<<<<< HEAD
-    pub fn init(allocator: *mem.Allocator, options: ziglet.app.WindowOptions) ziglet.app.WindowError!Self {
-        var result = Self {
-||||||| merged common ancestors
-    pub fn init(allocator: *mem.Allocator, options: super.WindowOptions) super.WindowError!Self {
-        var result = Self {
-=======
-    pub fn init(allocator: *mem.Allocator, options: super.WindowOptions) super.WindowError!Window {
-        var result = Window {
->>>>>>> removed Self variables
+    pub fn init(allocator: *mem.Allocator, options: ziglet.app.WindowOptions) ziglet.app.WindowError!Window {
+        var result = Window{
             .handle = undefined,
             .fullscreen = options.fullscreen,
             .borderless = options.borderless,
@@ -416,7 +385,7 @@ pub const Window = struct {
         errdefer result.deinit();
 
         result.handle = try open_window(options);
-        
+
         return result;
     }
 

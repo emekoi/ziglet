@@ -19,8 +19,8 @@ pub fn main() !void {
     var direct_allocator = std.heap.DirectAllocator.init();
     var alloc = &direct_allocator.allocator;
     defer direct_allocator.deinit();
-    
-    const opts = ziglet.app.WindowOptions {
+
+    const opts = ziglet.app.WindowOptions{
         .backend = ziglet.gfx.RenderBackend.OpenGL,
         .fullscreen = false,
         .borderless = false,
@@ -42,7 +42,7 @@ pub fn main() !void {
                     std.debug.warn("KeyDown: {}\n", key);
                     switch (key) {
                         Key.Escape => {
-                            w.should_close  = true;
+                            w.should_close = true;
                             break;
                         },
                         else => continue,

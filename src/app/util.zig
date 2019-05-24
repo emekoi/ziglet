@@ -9,7 +9,7 @@ const Allocator = std.mem.Allocator;
 
 /// max str len of 512
 pub fn L(str: []const u8) [512]u16 {
-    var result = []u16 {0} ** 512;
+    var result = []u16{0} ** 512;
     const last = std.unicode.utf8ToUtf16Le(result[0..], str) catch unreachable;
     result[last] = 0;
     return result;
@@ -39,7 +39,7 @@ pub fn RingBuffer(comptime T: type) type {
     return AlignedRingBuffer(T, @alignOf(T));
 }
 
-pub fn AlignedRingBuffer(comptime T: type, comptime A: u29) type  {
+pub fn AlignedRingBuffer(comptime T: type, comptime A: u29) type {
     return struct {
         const Self = @This();
 
@@ -49,7 +49,7 @@ pub fn AlignedRingBuffer(comptime T: type, comptime A: u29) type  {
         read: usize,
 
         pub fn init(allocator: *Allocator) Self {
-            return Self {
+            return Self{
                 .allocator = allocator,
                 .items = []align(A) ?T{},
                 .write = 0,
@@ -84,9 +84,7 @@ pub fn AlignedRingBuffer(comptime T: type, comptime A: u29) type  {
         pub fn push(self: *Self, data: T) !void {
             if (self.full()) {
                 const new_capacity = nextPowerOf2(self.capacity() + 1);
-                self.items = try self.allocator.alignedRealloc(
-                    ?T, A, self.items, new_capacity
-                );
+                self.items = try self.allocator.realloc(self.items, new_capacity);
             }
             self.items[self.mask(self.write)] = data;
             self.write += 1;

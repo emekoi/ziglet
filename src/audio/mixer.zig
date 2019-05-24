@@ -29,7 +29,7 @@ const Mutex = std.Mutex;
 const Allocator = std.mem.Allocator;
 
 const math = std.math;
-pub const Player = @import("index.zig").Player;
+pub const Player = @import("../audio.zig").Player;
 
 const BUFFER_SIZE = 512;
 const BUFFER_MASK = BUFFER_SIZE - 1;
@@ -63,7 +63,7 @@ pub const State = enum {
     Paused,
 };
 
-pub const EventHandler = fn(Event)void;
+pub const EventHandler = fn (Event) void;
 
 pub const Event = union(enum) {
     Lock: void,
@@ -72,7 +72,6 @@ pub const Event = union(enum) {
     Destroy: void,
     Samples: []const i16,
 };
-
 
 pub const SourceInfo = struct {
     handler: EventHandler,
@@ -84,22 +83,23 @@ pub const Source = struct {
     const Self = @This();
 
     mixer: *Mixer,
-    next: ?*const Source,       // next source in list
-    buffer: [BUFFER_SIZE]i16,   // internal buffer with raw stereo pcm
-    handler: EventHandler,      // event handler
-    sample_rate: usize,         // stream's native samplerate
-    length: usize,              // stream's length in frames
-    end: usize,                 // end index for the current play-through
-    pub state: State,           // current state
-    position: i64,              // current playhead position (fixed point)
-    lgain, rgain: i32,          // left and right gain (fixed point)
-    rate: usize,                // playback rate (fixed point)
-    next_fill: usize,           // next frame idx where the buffer needs to be filled
-    pub loop: bool,             // whether the source will loop when `end` is reached
-    rewind: bool,               // whether the source will rewind before playing
-    active: bool,               // whether the source is part of `sources` list
-    gain: f32,                  // gain set by `setGain()`
-    pan: f32,                   // pan set by `setPan()`
+    next: ?*const Source, // next source in list
+    buffer: [BUFFER_SIZE]i16, // internal buffer with raw stereo pcm
+    handler: EventHandler, // event handler
+    sample_rate: usize, // stream's native samplerate
+    length: usize, // stream's length in frames
+    end: usize, // end index for the current play-through
+    pub state: State, // current state
+    position: i64, // current playhead position (fixed point)
+    lgain,
+    rgain: i32, // left and right gain (fixed point)
+    rate: usize, // playback rate (fixed point)
+    next_fill: usize, // next frame idx where the buffer needs to be filled
+    pub loop: bool, // whether the source will loop when `end` is reached
+    rewind: bool, // whether the source will rewind before playing
+    active: bool, // whether the source is part of `sources` list
+    gain: f32, // gain set by `setGain()`
+    pan: f32, // pan set by `setPan()`
 
     fn new(mixer: *Mixer, info: SourceInfo) !*Self {
         const result = try mixer.allocator.createOne(Self);
@@ -115,7 +115,7 @@ pub const Source = struct {
     }
 
     fn rewindSource(self: *Self) void {
-        self.handler(Event {
+        self.handler(Event{
             .Rewind = {},
         });
         self.position = 0;
@@ -127,7 +127,7 @@ pub const Source = struct {
     fn fillBuffer(self: *Self, offset: usize, length: usize) void {
         const start = offset;
         const end = start + length;
-        self.handler(Event {
+        self.handler(Event{
             .Samples = self.buffer[start..end],
         });
     }
@@ -186,22 +186,22 @@ pub const Source = struct {
                 var n = frame * 2;
                 var i: usize = 0;
                 while (i < count) : (i += 1) {
-                    dst[(i * 2) + 0] += (self.buffer[(n    ) & BUFFER_MASK] * self.lgain) >> FX_BITS;
+                    dst[(i * 2) + 0] += (self.buffer[(n) & BUFFER_MASK] * self.lgain) >> FX_BITS;
                     dst[(i * 2) + 1] += (self.buffer[(n + 1) & BUFFER_MASK] * self.rgain) >> FX_BITS;
                     n += 2;
                 }
-                self.position += count* FX_UNIT;
+                self.position += count * FX_UNIT;
             } else {
                 // add audio to buffer -- interpolated
                 var i: usize = 0;
                 while (i < count) : (i += 1) {
                     const p = self.position & FX_MASK;
                     var n = (self.position >> FX_BITS) * 2;
-                    var a = self.buffer[(n    ) & BUFFER_MASK];
+                    var a = self.buffer[(n) & BUFFER_MASK];
                     var b = self.buffer[(n + 2) & BUFFER_MASK];
                     dst[(i * 2) + 0] += (FX_LERP(a, b, p) * self.lgain) >> FX_BITS;
                     n += 1;
-                    a = self.buffer[(n    ) & BUFFER_MASK];
+                    a = self.buffer[(n) & BUFFER_MASK];
                     b = self.buffer[(n + 2) & BUFFER_MASK];
                     dst[(i * 2) + 1] += (FX_LERP(a, b, p) * self.rgain) >> FX_BITS;
                     self.position += self.rate;
@@ -222,9 +222,7 @@ pub const Source = struct {
             }
         }
         held.release();
-        self.handler(Event {
-            .Destroy= {}
-        });
+        self.handler(Event{ .Destroy = {} });
         self.mixer.allocator.free(self);
         self = undefined;
     }
@@ -283,19 +281,18 @@ pub const Source = struct {
     }
 };
 
-
 pub const Mixer = struct {
     const Self = @This();
 
     lock: Mutex,
     allocator: *Allocator,
-    sources: ?*Source,          // linked list of active sources
-    buffer: [BUFFER_SIZE]i32,   // internal master buffer
-    sample_rate: i32,         // master samplerate
-    gain: i32,                  // master gain (fixed point)
+    sources: ?*Source, // linked list of active sources
+    buffer: [BUFFER_SIZE]i32, // internal master buffer
+    sample_rate: i32, // master samplerate
+    gain: i32, // master gain (fixed point)
 
     pub fn init(allocator: *Allocator, sample_rate: i32) Self {
-        return Self {
+        return Self{
             .allocator = allocator,
             .sample_rate = sample_rate,
             .lock = Mutex.init(),
@@ -318,7 +315,7 @@ pub const Mixer = struct {
         // zeroset internal buffer
         std.mem.secureZero(i32, self.buffer);
         const held = self.lock.acquire();
-        
+
         var source = self.src;
         while (source) |*src| {
             src.process(dst.len);

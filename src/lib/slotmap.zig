@@ -20,10 +20,10 @@ fn Slot(comptime T: type) type {
         value: T,
 
         fn new(version: u32, next_free: u32, value: T) Self {
-            return Self {
+            return Self{
                 .version = version,
                 .next_free = next_free,
-                .value = value
+                .value = value,
             };
         }
 
@@ -38,7 +38,7 @@ pub fn SlotMap(comptime T: type) type {
         const Self = @This();
         const SlotType = Slot(T);
 
-        pub const Error = error {
+        pub const Error = error{
             OverflowError,
             InvalidKey,
         };
@@ -46,7 +46,7 @@ pub fn SlotMap(comptime T: type) type {
         pub const Iterator = struct {
             map: *const Self,
             index: usize,
-            
+
             pub fn next_key(self: *Iterator) ?Key {
                 if (self.map.len == 0 or self.index > self.map.len) {
                     self.reset();
@@ -55,7 +55,7 @@ pub fn SlotMap(comptime T: type) type {
                 while (!self.map.slots.at(self.index).occupied()) : (self.index += 1) {}
                 self.index += 1;
 
-                return Key {
+                return Key{
                     .index = @intCast(u32, self.index - 1),
                     .version = self.map.slots.at(self.index - 1).version,
                 };
@@ -81,12 +81,12 @@ pub fn SlotMap(comptime T: type) type {
         len: usize,
 
         pub fn init(allocator: *std.mem.Allocator, size: u32) !Self {
-            var result = Self {
+            var result = Self{
                 .slots = std.ArrayList(SlotType).init(allocator),
                 .free_head = 0,
                 .len = 0,
             };
-            
+
             try result.set_capacity(size);
             return result;
         }
@@ -122,17 +122,17 @@ pub fn SlotMap(comptime T: type) type {
             if (new_len == std.math.maxInt(u32)) {
                 return error.OverflowError;
             }
-            
+
             const idx = self.free_head;
 
             if (idx < self.slots.count()) {
                 const slots = self.slots.toSlice();
                 const occupied_version = slots[idx].version | 1;
-                const result = Key {
+                const result = Key{
                     .index = @intCast(u32, idx),
-                    .version = occupied_version
+                    .version = occupied_version,
                 };
-                
+
                 slots[idx].value = value;
                 slots[idx].version = occupied_version;
                 self.free_head = slots[idx].next_free;
@@ -140,12 +140,11 @@ pub fn SlotMap(comptime T: type) type {
 
                 return result;
             } else {
-                
-                const result = Key {
+                const result = Key{
                     .index = @intCast(u32, idx),
-                    .version = 1
+                    .version = 1,
                 };
-                
+
                 try self.slots.append(SlotType.new(1, 0, value));
                 self.free_head = self.slots.count();
                 self.len = new_len;
@@ -179,20 +178,20 @@ pub fn SlotMap(comptime T: type) type {
 
         pub fn delete(self: *Self, key: Key) !void {
             if (self.has_key(key)) {
-                _ =  self.remove_from_slot(key.index);
+                _ = self.remove_from_slot(key.index);
             } else {
                 return error.InvalidKey;
             }
         }
 
         // TODO: zig closures
-        fn retain(self: *Self, filter: fn(key: Key, value: T) bool) void {
+        fn retain(self: *Self, filter: fn (key: Key, value: T) bool) void {
             const len = self.slots.len;
             var idx = 0;
 
             while (idx < len) : (idx += 1) {
                 const slot = self.slots.at(idx);
-                const key = Key { .index = idx, .version = slot.version };
+                const key = Key{ .index = idx, .version = slot.version };
                 if (slot.occupied and !filter(key, value)) {
                     _ = self.remove_from_slot(idx);
                 }
@@ -207,7 +206,7 @@ pub fn SlotMap(comptime T: type) type {
             self.slots.shrink(0);
             self.free_head = 0;
         }
-        
+
         pub fn get(self: *const Self, key: Key) !T {
             if (self.has_key(key)) {
                 return self.slots.at(key.index).value;
@@ -235,12 +234,11 @@ pub fn SlotMap(comptime T: type) type {
         }
 
         pub fn iterator(self: *const Self) Iterator {
-            return Iterator {
+            return Iterator{
                 .map = self,
                 .index = 0,
             };
         }
-
     };
 }
 
@@ -250,15 +248,15 @@ test "slotmap" {
     const assert = debug.assert;
     const assertError = debug.assertError;
 
-    const data = [][]const u8 {
+    const data = [][]const u8{
         "foo",
         "bar",
         "cat",
-        "zag"
+        "zag",
     };
 
     var map = try SlotMap([]const u8).init(std.debug.global_allocator, 3);
-    var keys = []Key { Key { .index = 0, .version = 0} } ** 3;
+    var keys = []Key{Key{ .index = 0, .version = 0 }} ** 3;
     var iter = map.iterator();
     var idx: usize = 0;
 
@@ -267,7 +265,7 @@ test "slotmap" {
     for (data[0..3]) |word, i| {
         keys[i] = try map.insert(word);
     }
-    
+
     assert(mem.eql(u8, try map.get(keys[0]), data[0]));
     assert(mem.eql(u8, try map.get(keys[1]), data[1]));
     assert(mem.eql(u8, try map.get(keys[2]), data[2]));
@@ -276,7 +274,7 @@ test "slotmap" {
     assert(mem.eql(u8, try map.get(keys[0]), data[3]));
     try map.delete(keys[0]);
 
-    assertError(map.get(keys[0]), error.InvalidKey);    
+    assertError(map.get(keys[0]), error.InvalidKey);
 
     while (iter.next_value()) |value| : (idx += 1) {
         assert(mem.eql(u8, value, data[idx + 1]));
@@ -291,11 +289,11 @@ test "slotmap" {
     map.clear();
 
     std.debug.warn("\n");
-    
+
     for (keys) |key| {
         assertError(map.get(key), error.InvalidKey);
     }
-    
+
     while (iter.next_value()) |value| {
         assert(iter.index == 0);
     }

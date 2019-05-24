@@ -8,7 +8,7 @@ const std = @import("std");
 const builtin = @import("builtin");
 const time = std.os.time;
 
-const winmm = @import("winmm/index.zig");
+const winmm = @import("audio/backend/winmm.zig");
 
 pub const Backend = enum {
     Wasapi,
@@ -16,9 +16,7 @@ pub const Backend = enum {
     Null,
 };
 
-pub const PlayerError = error {
-
-};
+pub const PlayerError = error{};
 
 pub const AudioMode = union(enum) {
     const Self = @This();
@@ -43,7 +41,7 @@ pub const Player = struct {
     buf_size: usize,
 
     pub fn new(allocator: *std.mem.Allocator, sample_rate: usize, mode: AudioMode, buf_size: usize) !Self {
-        return Self {
+        return Self{
             .player = try sys.Player.new(allocator, sample_rate, mode, buf_size),
             .sample_rate = sample_rate,
             .buf_size = buf_size,
@@ -84,7 +82,7 @@ pub const Player = struct {
 //     var direct_allocator = std.heap.DirectAllocator.init();
 //     const alloc = &direct_allocator.allocator;
 //     defer direct_allocator.deinit();
-    
+
 //     const mode = AudioMode { .Stereo = 2 };
 //     var player = try Player.new(alloc, 44100, mode, 2048);
 //     var stream = player.outStream().stream;

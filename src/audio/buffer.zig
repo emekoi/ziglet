@@ -12,7 +12,6 @@ const assert = debug.assert;
 const ArrayList = std.ArrayList;
 
 /// A buffer that allocates memory and maintains a null byte at the end.
-
 pub fn Buffer(comptime T: type) type {
     return struct {
         const Self = @This();

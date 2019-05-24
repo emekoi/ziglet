@@ -29,27 +29,27 @@ const GLclampd = f64;
 const GLvoid = *c_void;
 
 // opengl function pointers
-const PFNGLARRAYELEMENTEXTPROC = ?stdcallcc fn(GLint) void;
-const PFNGLDRAWARRAYSEXTPROC = ?stdcallcc fn(GLenum, GLint, GLsizei) void;
-const PFNGLVERTEXPOINTEREXTPROC = ?stdcallcc fn(GLint, GLenum, GLsizei, GLsizei, ?*const GLvoid) void;
-const PFNGLNORMALPOINTEREXTPROC = ?stdcallcc fn(GLenum, GLsizei, GLsizei, ?*const GLvoid) void;
-const PFNGLCOLORPOINTEREXTPROC = ?stdcallcc fn(GLint, GLenum, GLsizei, GLsizei, ?*const GLvoid) void;
-const PFNGLINDEXPOINTEREXTPROC = ?stdcallcc fn(GLenum, GLsizei, GLsizei, ?*const GLvoid) void;
-const PFNGLTEXCOORDPOINTEREXTPROC = ?stdcallcc fn(GLint, GLenum, GLsizei, GLsizei, ?*const GLvoid) void;
-const PFNGLEDGEFLAGPOINTEREXTPROC = ?stdcallcc fn(GLsizei, GLsizei, ?*const GLboolean) void;
-const PFNGLGETPOINTERVEXTPROC = ?stdcallcc fn(GLenum, ?*(?*GLvoid)) void;
-const PFNGLARRAYELEMENTARRAYEXTPROC = ?stdcallcc fn(GLenum, GLsizei, ?*const GLvoid) void;
-const PFNGLDRAWRANGEELEMENTSWINPROC = ?stdcallcc fn(GLenum, GLuint, GLuint, GLsizei, GLenum, ?*const GLvoid) void;
-const PFNGLADDSWAPHINTRECTWINPROC = ?stdcallcc fn(GLint, GLint, GLsizei, GLsizei) void;
-const PFNGLCOLORTABLEEXTPROC = ?stdcallcc fn(GLenum, GLenum, GLsizei, GLenum, GLenum, ?*const GLvoid) void;
-const PFNGLCOLORSUBTABLEEXTPROC = ?stdcallcc fn(GLenum, GLsizei, GLsizei, GLenum, GLenum, ?*const GLvoid) void;
-const PFNGLGETCOLORTABLEEXTPROC = ?stdcallcc fn(GLenum, GLenum, GLenum, ?*GLvoid) void;
-const PFNGLGETCOLORTABLEPARAMETERIVEXTPROC = ?stdcallcc fn(GLenum, GLenum, ?*GLint) void;
-const PFNGLGETCOLORTABLEPARAMETERFVEXTPROC = ?stdcallcc fn(GLenum, GLenum, ?*GLfloat) void;
+const PFNGLARRAYELEMENTEXTPROC = ?stdcallcc fn (GLint) void;
+const PFNGLDRAWARRAYSEXTPROC = ?stdcallcc fn (GLenum, GLint, GLsizei) void;
+const PFNGLVERTEXPOINTEREXTPROC = ?stdcallcc fn (GLint, GLenum, GLsizei, GLsizei, ?*const GLvoid) void;
+const PFNGLNORMALPOINTEREXTPROC = ?stdcallcc fn (GLenum, GLsizei, GLsizei, ?*const GLvoid) void;
+const PFNGLCOLORPOINTEREXTPROC = ?stdcallcc fn (GLint, GLenum, GLsizei, GLsizei, ?*const GLvoid) void;
+const PFNGLINDEXPOINTEREXTPROC = ?stdcallcc fn (GLenum, GLsizei, GLsizei, ?*const GLvoid) void;
+const PFNGLTEXCOORDPOINTEREXTPROC = ?stdcallcc fn (GLint, GLenum, GLsizei, GLsizei, ?*const GLvoid) void;
+const PFNGLEDGEFLAGPOINTEREXTPROC = ?stdcallcc fn (GLsizei, GLsizei, ?*const GLboolean) void;
+const PFNGLGETPOINTERVEXTPROC = ?stdcallcc fn (GLenum, ?*(?*GLvoid)) void;
+const PFNGLARRAYELEMENTARRAYEXTPROC = ?stdcallcc fn (GLenum, GLsizei, ?*const GLvoid) void;
+const PFNGLDRAWRANGEELEMENTSWINPROC = ?stdcallcc fn (GLenum, GLuint, GLuint, GLsizei, GLenum, ?*const GLvoid) void;
+const PFNGLADDSWAPHINTRECTWINPROC = ?stdcallcc fn (GLint, GLint, GLsizei, GLsizei) void;
+const PFNGLCOLORTABLEEXTPROC = ?stdcallcc fn (GLenum, GLenum, GLsizei, GLenum, GLenum, ?*const GLvoid) void;
+const PFNGLCOLORSUBTABLEEXTPROC = ?stdcallcc fn (GLenum, GLsizei, GLsizei, GLenum, GLenum, ?*const GLvoid) void;
+const PFNGLGETCOLORTABLEEXTPROC = ?stdcallcc fn (GLenum, GLenum, GLenum, ?*GLvoid) void;
+const PFNGLGETCOLORTABLEPARAMETERIVEXTPROC = ?stdcallcc fn (GLenum, GLenum, ?*GLint) void;
+const PFNGLGETCOLORTABLEPARAMETERFVEXTPROC = ?stdcallcc fn (GLenum, GLenum, ?*GLfloat) void;
 
 // wgl extentions
-const PFNWGLCREATECONTEXTATTRIBSARBPROC = ?stdcallcc fn(HDC, HGLRC, ?*const c_int) HGLRC;
-const PFNWGLCHOOSEPIXELFORMATARBPROC = ?stdcallcc fn(HDC, ?*const c_int, ?*const FLOAT, UINT, ?*c_int, ?*UINT) BOOL;
+const PFNWGLCREATECONTEXTATTRIBSARBPROC = ?stdcallcc fn (HDC, HGLRC, ?*const c_int) HGLRC;
+const PFNWGLCHOOSEPIXELFORMATARBPROC = ?stdcallcc fn (HDC, ?*const c_int, ?*const FLOAT, UINT, ?*c_int, ?*UINT) BOOL;
 
 const PIXELFORMATDESCRIPTOR = extern struct {
     nSize: WORD,
@@ -80,9 +80,7 @@ const PIXELFORMATDESCRIPTOR = extern struct {
     dwDamageMask: DWORD,
 };
 
-extern "gdi32" stdcallcc fn StretchDIBits(hdc: HDC, xDest: c_int, yDest: c_int, DestWidth: c_int, DestHeight: c_int,
-                    xSrc: c_int, ySrc: c_int, SrcWidth: c_int, SrcHeight: c_int, lpBits: ?*const c_void,
-                    lpbmi: ?*const BITMAPINFO, iUsage: UINT, rop: DWORD) c_int;
+extern "gdi32" stdcallcc fn StretchDIBits(hdc: HDC, xDest: c_int, yDest: c_int, DestWidth: c_int, DestHeight: c_int, xSrc: c_int, ySrc: c_int, SrcWidth: c_int, SrcHeight: c_int, lpBits: ?*const c_void, lpbmi: ?*const BITMAPINFO, iUsage: UINT, rop: DWORD) c_int;
 
 extern "gdi32" stdcallcc fn ChoosePixelFormat(hdc: HDC, ppfd: ?*const PIXELFORMATDESCRIPTOR) c_int;
 
@@ -96,8 +94,7 @@ extern "opengl32" stdcallcc fn wglDeleteContext(arg0: HGLRC) BOOL;
 
 extern "opengl32" stdcallcc fn wglGetProcAddress(LPCSTR) ?PROC;
 
-
-pub const OpenGLError = error {
+pub const OpenGLError = error{
     InitError,
     ShutdownError,
 };
@@ -120,17 +117,12 @@ pub const Context = struct {
     pub fn dummy_init(window: *const super.Window) !Context {
         var result: Context = undefined;
 
-        result.dummy_hWnd = CreateWindowExW(
-            CLASS_NAME.ptr,CLASS_NAME.ptr,
-            WS_CLIPCHILDREN | WS_CLIPSIBLINGS,
-            0, 0, 1, 1, null, null,
-            native.GetModuleHandleW(null), null
-        ) orelse return error.InitError;
+        result.dummy_hWnd = CreateWindowExW(CLASS_NAME.ptr, CLASS_NAME.ptr, WS_CLIPCHILDREN | WS_CLIPSIBLINGS, 0, 0, 1, 1, null, null, native.GetModuleHandleW(null), null) orelse return error.InitError;
 
         result.dummy_hDc = GetDC(dummy_wnd);
-        
-        result.dummy_pfd = PIXELFORMATDESCRIPTOR {
-            .nSize =@sizeOf(PIXELFORMATDESCRIPTOR),
+
+        result.dummy_pfd = PIXELFORMATDESCRIPTOR{
+            .nSize = @sizeOf(PIXELFORMATDESCRIPTOR),
             .nVersion = 1,
             .dwFlags = PFD_DOUBLEBUFFER | PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL,
             .iPixelType = PFD_TYPE_RGBA,
@@ -151,13 +143,13 @@ pub const Context = struct {
             .cDepthBits = 0,
             .cStencilBits = 0,
             .cAuxBuffers = 0,
-            .iLayerType = PFD_MAIN_PLANE, 
+            .iLayerType = PFD_MAIN_PLANE,
             .bReserved = 0,
             .dwLayerMask = 0,
             .dwVisibleMask = 0,
             .dwDamageMask = 0,
         };
-        
+
         result.dummy_pfdid = ChoosePixelFormat(result.dummy_hDc, &result.dummy_pfd);
 
         if (result.dummy_pfdid == 0) {
@@ -165,7 +157,7 @@ pub const Context = struct {
         }
 
         if (SetPixelFormat(result.dummy_hDc, result.dummy_hDc, &result.dummy_pfd) == FALSE) {
-            return error.InitError;   
+            return error.InitError;
         }
 
         if (wglCreateContext(result.dummy_hDc)) |hRc| {

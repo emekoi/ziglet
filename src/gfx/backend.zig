@@ -8,16 +8,16 @@ const builtin = @import("builtin");
 const Os = builtin.Os;
 
 pub const dx11 = switch (builtin.os) {
-    Os.windows => @import("dx11/index.zig"),
+    .windows => @import("backend/dx11.zig"),
     else => void,
 };
 
 pub const opengl = switch (builtin.os) {
-    Os.windows, Os.linux, Os.macosx => @import("opengl/index.zig"),
+    .windows, .linux, .macosx => @import("backend/opengl.zig"),
     else => void,
 };
 
 pub const metal = switch (builtin.os) {
-    Os.macosx => @import("metal/index.zig"),
+    .macosx => @import("backend/metal.zig"),
     else => void,
 };

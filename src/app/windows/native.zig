@@ -6,12 +6,9 @@
 
 const std = @import("std");
 
-use std.os.windows;
 pub use std.os.windows;
 
 pub const ATOM = u16;
-
-pub const LONG = c_int;
 
 pub const LONG_PTR = usize;
 
@@ -155,7 +152,7 @@ pub const SIZE_MAXIMIZED = 2;
 
 pub const TME_LEAVE = 2;
 
-pub const WNDPROC = stdcallcc fn(HWND, UINT, WPARAM, LPARAM) LRESULT;
+pub const WNDPROC = stdcallcc fn (HWND, UINT, WPARAM, LPARAM) LRESULT;
 
 pub const WNDCLASSEX = extern struct {
     cbSize: UINT,
@@ -275,11 +272,7 @@ pub extern "user32" stdcallcc fn AdjustWindowRect(lpRect: *RECT, dwStyle: DWORD,
 
 pub extern "user32" stdcallcc fn GetClientRect(wnd: HWND, lpRect: *RECT) BOOL;
 
-pub extern "user32" stdcallcc fn CreateWindowExW(dwExStyle: DWORD, lpClassName: LPCWSTR,
-                    lpWindowName: LPCWSTR, dwStyle: DWORD, X: c_int,
-                    Y: c_int, nWidth: c_int, nHeight: c_int,
-                    hWndParent: ?HWND, menu: ?HMENU, hInstance: ?HMODULE,
-                    lpParam: ?LPVOID) ?HWND;
+pub extern "user32" stdcallcc fn CreateWindowExW(dwExStyle: DWORD, lpClassName: LPCWSTR, lpWindowName: LPCWSTR, dwStyle: DWORD, X: c_int, Y: c_int, nWidth: c_int, nHeight: c_int, hWndParent: ?HWND, menu: ?HMENU, hInstance: ?HMODULE, lpParam: ?LPVOID) ?HWND;
 
 pub extern "user32" stdcallcc fn DestroyWindow(wnd: HWND) BOOL;
 
@@ -289,8 +282,7 @@ pub extern "user32" stdcallcc fn GetDC(wnd: HWND) ?HDC;
 
 pub extern "user32" stdcallcc fn ReleaseDC(wnd: HWND, hDC: HDC) c_int;
 
-pub extern "user32" stdcallcc fn PeekMessageW(lpMsg: *MSG, wnd: HWND, wMsgFilterMin: UINT,
-                    wMsgFilterMax: UINT, wRemoveMsg: UINT) BOOL;
+pub extern "user32" stdcallcc fn PeekMessageW(lpMsg: *MSG, wnd: HWND, wMsgFilterMin: UINT, wMsgFilterMax: UINT, wRemoveMsg: UINT) BOOL;
 
 pub extern "user32" stdcallcc fn SendMessageW(hWnd: HWND, Msg: UINT, wParam: WPARAM, lParam: LPARAM) LRESULT;
 

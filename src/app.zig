@@ -5,8 +5,8 @@
 //
 
 const builtin = @import("builtin");
-pub const event = @import("event.zig");
-const ziglet = @import("../index.zig");
+pub const event = @import("app/event.zig");
+const ziglet = @import("ziglet.zig");
 
 const Os = builtin.Os;
 const gfx = ziglet.gfx;
@@ -21,13 +21,12 @@ pub const WindowOptions = struct {
     title: []const u8,
 };
 
-pub const WindowError = error {
+pub const WindowError = error{
     InitError,
     ShutdownError,
 };
 
 pub use switch (builtin.os) {
-    Os.windows => @import("windows/index.zig"),
+    Os.windows => @import("app/windows.zig"),
     else => @compileError("unsupported os"),
 };
-

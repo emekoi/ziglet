@@ -7,4 +7,4 @@ a small zig game library inspired by [sokol](https://github.com/floooh/sokol), [
 one of the goals of this projects is to have no c dependencies at all.
 
 ### crossplatform
-another goal of this project is to support as many systems as possible. see [the TODO](TODO) for information.
+another goal of this project is to support as many systems as possible. see [the TODO](TODO.md) for information.

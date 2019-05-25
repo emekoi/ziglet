@@ -30,13 +30,15 @@ pub fn main() !void {
         .title = "hello_world",
     };
 
-    var w = try Window.init(alloc, opts);
+    var w: Window = undefined;
+    try w.init(alloc, opts);
     defer w.deinit();
+    var pump = w.getEventPump();
 
     while (!w.should_close) {
         w.update();
 
-        while (w.event_pump.pop()) |event| {
+        while (pump.pop()) |event| {
             switch (event) {
                 Event.KeyDown => |key| {
                     std.debug.warn("KeyDown: {}\n", key);

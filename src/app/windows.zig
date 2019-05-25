@@ -6,15 +6,16 @@
 
 const std = @import("std");
 const ziglet = @import("../ziglet.zig");
-const util = @import("util.zig");
+const internals = @import("../internals.zig");
+const native = @import("windows/native.zig");
+
+const mem = std.mem;
+const app = ziglet.app;
 const assert = std.debug.assert;
 
-const native = @import("windows/native.zig");
-const mem = std.mem;
-
-pub const Event = ziglet.app.event.Event;
-pub const Key = ziglet.app.event.Key;
-pub const MouseButton = ziglet.app.event.MouseButton;
+pub const Event = app.event.Event;
+pub const Key = app.event.Key;
+pub const MouseButton = app.event.MouseButton;
 
 const Backend = union(ziglet.gfx.RenderBackend) {
     OpenGL: @import("backend/opengl.zig").Context,
@@ -292,8 +293,9 @@ pub const Window = struct {
         return result;
     }
 
-    fn open_window(options: ziglet.app.WindowOptions) ziglet.app.WindowError!native.HWND {
-        const wtitle = util.L(options.title)[0..];
+    fn open_window(options: ziglet.app.WindowOptions) !native.HWND {
+        var wide_title = []u16{0} ** 512;
+        const wtitle = internals.toWide(&wide_title, options.title);
 
         const wcex = native.WNDCLASSEX{
             .cbSize = @sizeOf(native.WNDCLASSEX),
@@ -304,7 +306,7 @@ pub const Window = struct {
             .hInstance = native.GetModuleHandleW(null),
             .hIcon = native.LoadIconW(null, native.IDI_WINLOGO).?,
             .hCursor = native.LoadCursorW(null, native.IDC_ARROW).?,
-            .hbrBackground = null,
+            .hbrBackground = native.HBRUSH(native.GetStockObject(native.NULL_BRUSH)),
             .lpszMenuName = null,
             .lpszClassName = wtitle.ptr,
             .hIconSm = null,
@@ -367,8 +369,18 @@ pub const Window = struct {
         return result;
     }
 
-    pub fn init(allocator: *mem.Allocator, options: ziglet.app.WindowOptions) ziglet.app.WindowError!Window {
-        var result = Window{
+    fn message_loop(self: *const Window) void {
+        var msg: native.MSG = undefined;
+
+        while (native.PeekMessageW(&msg, self.handle, 0, 0, native.PM_REMOVE) == native.TRUE) {
+            if (msg.message == native.WM_QUIT) break;
+            _ = native.TranslateMessage(&msg);
+            _ = native.DispatchMessageW(&msg);
+        }
+    }
+
+    pub fn init(self: *Window, allocator: *mem.Allocator, options: ziglet.app.WindowOptions) !void {
+        self.* = Window{
             .handle = undefined,
             .fullscreen = options.fullscreen,
             .borderless = options.borderless,
@@ -382,11 +394,10 @@ pub const Window = struct {
             .event_pump = ziglet.app.event.EventPump.init(allocator),
         };
 
-        errdefer result.deinit();
+        errdefer self.deinit();
 
-        result.handle = try open_window(options);
-
-        return result;
+        self.handle = try open_window(options);
+        _ = native.SetWindowLongPtrW(self.handle, native.GWLP_USERDATA, @ptrToInt(self));
     }
 
     pub fn deinit(self: Window) void {
@@ -394,22 +405,15 @@ pub const Window = struct {
             _ = native.ChangeDisplaySettingsW(null, 0);
             _ = native.ShowCursor(native.TRUE);
         }
-        _ = native.UnregisterClassW(util.L(self.title)[0..].ptr, native.GetModuleHandleW(null));
-    }
-
-    fn message_loop(self: *const Window) void {
-        var msg: native.MSG = undefined;
-
-        while (native.PeekMessageW(&msg, self.handle, 0, 0, native.PM_REMOVE) == native.TRUE) {
-            if (msg.message == native.WM_QUIT) break;
-            _ = native.TranslateMessage(&msg);
-            _ = native.DispatchMessageW(&msg);
-        }
+        var wide_title = []u16{0} ** 512;
+        _ = native.UnregisterClassW(internals.toWide(&wide_title, self.title).ptr, native.GetModuleHandleW(null));
     }
 
     pub fn update(self: *Window) void {
-        _ = native.SetWindowLongPtrW(self.handle, native.GWLP_USERDATA, @ptrToInt(self));
-
         self.message_loop();
+    }
+
+    pub fn getEventPump(self: *Window) *app.event.EventPump {
+        return &self.event_pump;
     }
 };

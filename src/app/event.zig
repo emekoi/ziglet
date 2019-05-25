@@ -6,7 +6,7 @@
 
 const std = @import("std");
 const ziglet = @import("../ziglet.zig");
-const util = @import("util.zig");
+const internals = @import("../internals.zig");
 
 const mem = std.mem;
 
@@ -26,7 +26,7 @@ pub const Event = union(enum) {
     // FileDroppped: []const u8,
 };
 
-pub const EventPump = util.RingBuffer(Event);
+pub const EventPump = internals.RingBuffer(Event);
 
 pub const MouseButton = enum {
     Left,

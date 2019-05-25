@@ -26,6 +26,8 @@ pub const HDC = HANDLE;
 
 pub const HDROP = HANDLE;
 
+pub const HGDIOBJ = HANDLE;
+
 pub const LPARAM = LONG_PTR;
 
 pub const WPARAM = LONG_PTR;
@@ -151,6 +153,8 @@ pub const SIZE_MINIMIZED = 1;
 pub const SIZE_MAXIMIZED = 2;
 
 pub const TME_LEAVE = 2;
+
+pub const NULL_BRUSH = 5;
 
 pub const WNDPROC = stdcallcc fn (HWND, UINT, WPARAM, LPARAM) LRESULT;
 
@@ -322,6 +326,8 @@ pub extern "shell32" stdcallcc fn DragFinish(hDrop: HDROP) void;
 pub extern "user32" stdcallcc fn GetCursorPos(lpPoint: *POINT) BOOL;
 
 pub extern "user32" stdcallcc fn ScreenToClient(hWndl: HWND, lpPoint: *POINT) BOOL;
+
+pub extern "gdi32" stdcallcc fn GetStockObject(i: INT) HGDIOBJ;
 
 pub inline fn LOWORD(l: DWORD) WORD {
     return @intCast(WORD, (l & 0xffff));

@@ -7,12 +7,10 @@
 const std = @import("std");
 const Allocator = std.mem.Allocator;
 
-/// max str len of 512
-pub fn L(str: []const u8) [512]u16 {
-    var result = []u16{0} ** 512;
-    const last = std.unicode.utf8ToUtf16Le(result[0..], str) catch unreachable;
-    result[last] = 0;
-    return result;
+pub fn toWide(out: []u16, str: []const u8) []const u16 {
+    const last = std.unicode.utf8ToUtf16Le(out, str) catch unreachable;
+    out[last] = 0;
+    return out[0..(last + 1)];
 }
 
 pub fn clamp(comptime T: type, x: T, a: T, b: T) T {
@@ -94,6 +92,13 @@ pub fn AlignedRingBuffer(comptime T: type, comptime A: u29) type {
             if (!self.empty()) {
                 self.read += 1;
                 return self.items[self.mask(self.read - 1)];
+            }
+            return null;
+        }
+
+        pub fn peek(self: *const Self) ?T {
+            if (!self.empty()) {
+                return self.items[self.mask(self.read)];
             }
             return null;
         }

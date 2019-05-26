@@ -9,15 +9,15 @@ const Os = builtin.Os;
 
 pub const dx11 = switch (builtin.os) {
     .windows => @import("backend/dx11.zig"),
-    else => void,
+    else => @compileError("unsupported OS"),
 };
 
 pub const opengl = switch (builtin.os) {
     .windows, .linux, .macosx => @import("backend/opengl.zig"),
-    else => void,
+    else => @compileError("unsupported OS"),
 };
 
 pub const metal = switch (builtin.os) {
     .macosx => @import("backend/metal.zig"),
-    else => void,
+    else => @compileError("unsupported OS"),
 };

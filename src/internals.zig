@@ -17,6 +17,11 @@ pub fn clamp(comptime T: type, x: T, a: T, b: T) T {
     return std.math.max(std.math.min(a, b), std.math.min(x, std.math.max(a, b)));
 }
 
+pub fn forceErr() !void {
+    var _i: i32 = 0;
+    if (_i > 1) return error.FakeError;
+}
+
 fn nextPowerOf2(x: usize) usize {
     if (x == 0) return 1;
     var result = x -% 1;

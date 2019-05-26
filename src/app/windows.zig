@@ -129,38 +129,26 @@ fn intToKey(lParam: native.LPARAM) Key {
     };
 }
 
-pub const Window = struct {
+pub const WindowImpl = struct {
     handle: native.HWND,
 
-    fullscreen: bool,
-    borderless: bool,
-    resizeable: bool,
-    width: usize,
-    height: usize,
-    title: []const u8,
-
-    mouse_tracked: bool,
-    iconified: bool,
-
-    pub should_close: bool,
-    pub event_pump: ziglet.app.event.EventPump,
-
-    fn window_resized(self: *Window) ?[2]i32 {
+    fn window_resized(self: *WindowImpl) ?[2]i32 {
+        var w = @fieldParentPtr(app.Window, "impl", self);
         var rect: native.RECT = undefined;
         if (native.GetClientRect(self.handle, &rect) == native.TRUE) {
             const new_width = @intCast(usize, rect.right - rect.left);
             const new_height = @intCast(usize, rect.bottom - rect.top);
-            if ((new_width != self.width) or (new_height != self.height)) {
-                self.width = new_width;
-                self.height = new_height;
+            if ((new_width != w.options.width) or (new_height != w.options.height)) {
+                w.options.width = new_width;
+                w.options.height = new_height;
                 return []i32{
                     @intCast(i32, new_width),
                     @intCast(i32, new_height),
                 };
             }
         } else {
-            self.width = 1;
-            self.height = 1;
+            w.options.width = 1;
+            w.options.height = 1;
         }
         return null;
     }
@@ -168,74 +156,74 @@ pub const Window = struct {
     stdcallcc fn wnd_proc(hWnd: native.HWND, msg: native.UINT, wParam: native.WPARAM, lParam: native.LPARAM) native.LRESULT {
         var result: native.LRESULT = 0;
 
-        var self = @intToPtr(?*Window, native.GetWindowLongPtrW(hWnd, native.GWLP_USERDATA)) orelse {
+        var self = @intToPtr(?*WindowImpl, native.GetWindowLongPtrW(hWnd, native.GWLP_USERDATA)) orelse {
             return native.DefWindowProcW(hWnd, msg, wParam, lParam);
         };
 
+        var window = @fieldParentPtr(app.Window, "impl", self);
+
         switch (msg) {
             native.WM_CLOSE => {
-                self.should_close = true;
+                window.should_close = true;
             },
             native.WM_SYSKEYDOWN, native.WM_KEYDOWN => {
-                self.event_pump.push(Event{ .KeyDown = intToKey(lParam >> 16) }) catch unreachable;
+                window.event_pump.push(Event{ .KeyDown = intToKey(lParam >> 16) }) catch unreachable;
             },
             native.WM_SYSKEYUP, native.WM_KEYUP => {
-                self.event_pump.push(Event{ .KeyUp = intToKey(lParam >> 16) }) catch unreachable;
+                window.event_pump.push(Event{ .KeyUp = intToKey(lParam >> 16) }) catch unreachable;
             },
             native.WM_SYSCHAR, native.WM_CHAR => {
-                self.event_pump.push(Event{ .Char = @intCast(u8, wParam) }) catch unreachable;
+                window.event_pump.push(Event{ .Char = @intCast(u8, wParam) }) catch unreachable;
             },
             native.WM_LBUTTONDOWN => {
-                self.event_pump.push(Event{ .MouseDown = MouseButton.Left }) catch unreachable;
+                window.event_pump.push(Event{ .MouseDown = MouseButton.Left }) catch unreachable;
             },
             native.WM_RBUTTONDOWN => {
-                self.event_pump.push(Event{ .MouseDown = MouseButton.Right }) catch unreachable;
+                window.event_pump.push(Event{ .MouseDown = MouseButton.Right }) catch unreachable;
             },
             native.WM_MBUTTONDOWN => {
-                self.event_pump.push(Event{
+                window.event_pump.push(Event{
                     .MouseDown = MouseButton.Middle,
                 }) catch unreachable;
             },
             native.WM_LBUTTONUP => {
-                self.event_pump.push(Event{ .MouseUp = MouseButton.Left }) catch unreachable;
+                window.event_pump.push(Event{ .MouseUp = MouseButton.Left }) catch unreachable;
             },
             native.WM_RBUTTONUP => {
-                self.event_pump.push(Event{ .MouseUp = MouseButton.Right }) catch unreachable;
+                window.event_pump.push(Event{ .MouseUp = MouseButton.Right }) catch unreachable;
             },
             native.WM_MBUTTONUP => {
-                self.event_pump.push(Event{
+                window.event_pump.push(Event{
                     .MouseUp = MouseButton.Middle,
                 }) catch unreachable;
             },
             native.WM_MOUSEWHEEL => {
-                if (self.mouse_tracked) {
+                if (window.mouse_tracked) {
                     const scroll = @intToFloat(f32, @intCast(i16, @truncate(u16, (@truncate(u32, wParam) >> 16) & 0xffff))) * 0.1;
-                    self.event_pump.push(Event{
+                    window.event_pump.push(Event{
                         .MouseScroll = []f32{ 0.0, scroll },
                     }) catch unreachable;
                 }
             },
             native.WM_MOUSEHWHEEL => {
-                if (self.mouse_tracked) {
+                if (window.mouse_tracked) {
                     const scroll = @intToFloat(f32, @intCast(i16, @truncate(u16, (@truncate(u32, wParam) >> 16) & 0xffff))) * 0.1;
-                    self.event_pump.push(Event{
+                    window.event_pump.push(Event{
                         .MouseScroll = []f32{ scroll, 0.0 },
                     }) catch unreachable;
                 }
             },
             native.WM_MOUSEMOVE => {
-                if (!self.mouse_tracked) {
-                    self.mouse_tracked = true;
+                if (!window.mouse_tracked) {
+                    window.mouse_tracked = true;
                     var tme: native.TRACKMOUSEEVENT = undefined;
                     tme.cbSize = @sizeOf(native.TRACKMOUSEEVENT);
                     tme.dwFlags = native.TME_LEAVE;
                     tme.hwndTrack = self.handle;
                     assert(native.TrackMouseEvent(&tme) != 0);
-                    self.event_pump.push(Event{
-                        .MouseEnter = {},
-                    }) catch unreachable;
+                    window.event_pump.push(Event.MouseEnter) catch unreachable;
                 }
-                self.event_pump.push(Event{
+                window.event_pump.push(Event{
                     .MouseMove = []f32{
                         @bitCast(f32, native.GET_X_LPARAM(lParam)),
                         @bitCast(f32, native.GET_Y_LPARAM(lParam)),
@@ -243,48 +231,41 @@ pub const Window = struct {
                 }) catch unreachable;
             },
             native.WM_MOUSELEAVE => {
-                self.mouse_tracked = false;
-                self.event_pump.push(Event{
-                    .MouseLeave = {},
-                }) catch unreachable;
+                window.mouse_tracked = false;
+                window.event_pump.push(Event.MouseLeave) catch unreachable;
             },
             native.WM_SIZE => {
                 const iconified = wParam == native.SIZE_MINIMIZED;
-                if (iconified != self.iconified) {
-                    self.iconified = iconified;
+                if (iconified != window.iconified) {
+                    window.iconified = iconified;
                     if (iconified) {
-                        self.event_pump.push(Event{
-                            .Iconified = {},
-                        }) catch unreachable;
+                        window.event_pump.push(Event.Iconified) catch unreachable;
                     } else {
-                        self.event_pump.push(Event{
-                            .Restored = {},
-                        }) catch unreachable;
+                        window.event_pump.push(Event.Restored) catch unreachable;
                     }
                 }
                 if (self.window_resized()) |new_size| {
-                    self.event_pump.push(Event{
+                    window.event_pump.push(Event{
                         .Resized = new_size,
                     }) catch unreachable;
                 }
             },
-            // native.WM_DROPFILES => {
-            //     const hDrop = @intToPtr(native.HDROP, wParam);
-            //     const count = native.DragQueryFileW(hDrop, 0xFFFFFFFF, null, 0);
+            native.WM_DROPFILES => {
+                const hDrop = @intToPtr(native.HDROP, wParam);
+                const count = native.DragQueryFileW(hDrop, 0xFFFFFFFF, null, 0);
 
-            //     var index: c_uint = 0;
-            //     while (index < count) : (index += 1) {
-            //         var in_buffer = []u16{0} ** (std.os.MAX_PATH_BYTES / 3 + 1);
-            //         var out_buffer = []u8{0} ** (std.os.MAX_PATH_BYTES + 1);
-            //         const len = native.DragQueryFileW(hDrop, index, in_buffer[0..].ptr, in_buffer.len);
-            //         _ = std.unicode.utf16leToUtf8(out_buffer[0..], in_buffer[0..]) catch unreachable;
-            //         self.event_pump.push(Event {
-            //             .FileDroppped = out_buffer[0..len],
-            //         }) catch unreachable;
-            //     }
+                var index: c_uint = 0;
+                while (index < count) : (index += 1) {
+                    var in_buffer = []u16{0} ** (std.os.MAX_PATH_BYTES / 3 + 1);
+                    var len = native.DragQueryFileW(hDrop, index, in_buffer[0..].ptr, in_buffer.len);
+                    var res = std.unicode.utf16leToUtf8Alloc(window.allocator, in_buffer[0..len]) catch unreachable;
+                    window.event_pump.push(Event{
+                        .FileDroppped = res,
+                    }) catch unreachable;
+                }
 
-            //     native.DragFinish(hDrop);
-            // },
+                native.DragFinish(hDrop);
+            },
             else => {
                 return native.DefWindowProcW(hWnd, msg, wParam, lParam);
             },
@@ -369,7 +350,7 @@ pub const Window = struct {
         return result;
     }
 
-    fn message_loop(self: *const Window) void {
+    fn message_loop(self: *const WindowImpl) void {
         var msg: native.MSG = undefined;
 
         while (native.PeekMessageW(&msg, self.handle, 0, 0, native.PM_REMOVE) == native.TRUE) {
@@ -379,19 +360,9 @@ pub const Window = struct {
         }
     }
 
-    pub fn init(self: *Window, allocator: *mem.Allocator, options: ziglet.app.WindowOptions) !void {
-        self.* = Window{
+    pub fn init(self: *WindowImpl, options: ziglet.app.WindowOptions) !void {
+        self.* = WindowImpl{
             .handle = undefined,
-            .fullscreen = options.fullscreen,
-            .borderless = options.borderless,
-            .resizeable = options.resizeable,
-            .width = options.width,
-            .height = options.height,
-            .title = options.title,
-            .should_close = false,
-            .mouse_tracked = false,
-            .iconified = false,
-            .event_pump = ziglet.app.event.EventPump.init(allocator),
         };
 
         errdefer self.deinit();
@@ -400,20 +371,18 @@ pub const Window = struct {
         _ = native.SetWindowLongPtrW(self.handle, native.GWLP_USERDATA, @ptrToInt(self));
     }
 
-    pub fn deinit(self: Window) void {
-        if (self.fullscreen) {
+    pub fn deinit(self: *WindowImpl) void {
+        var window = @fieldParentPtr(app.Window, "impl", self);
+        if (window.options.fullscreen) {
             _ = native.ChangeDisplaySettingsW(null, 0);
             _ = native.ShowCursor(native.TRUE);
         }
         var wide_title = []u16{0} ** 512;
-        _ = native.UnregisterClassW(internals.toWide(&wide_title, self.title).ptr, native.GetModuleHandleW(null));
+        _ = native.UnregisterClassW(internals.toWide(&wide_title, window.options.title).ptr, native.GetModuleHandleW(null));
     }
 
-    pub fn update(self: *Window) void {
+    pub fn update(self: *WindowImpl) !void {
+        try internals.forceErr();
         self.message_loop();
-    }
-
-    pub fn getEventPump(self: *Window) *app.event.EventPump {
-        return &self.event_pump;
     }
 };

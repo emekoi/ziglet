@@ -21,7 +21,7 @@ pub fn main() !void {
     defer direct_allocator.deinit();
 
     const opts = ziglet.app.WindowOptions{
-        .backend = ziglet.gfx.RenderBackend.OpenGL,
+        .backend = ziglet.gfx.Backend{ .OpenGL = .GL3_3 },
         .fullscreen = false,
         .borderless = false,
         .resizeable = true,
@@ -36,7 +36,7 @@ pub fn main() !void {
     var pump = w.getEventPump();
 
     while (!w.should_close) {
-        w.update();
+        try w.update();
 
         while (pump.pop()) |event| {
             switch (event) {
@@ -61,7 +61,10 @@ pub fn main() !void {
                 Event.Resized => |size| std.debug.warn("Resized: {}, {}\n", size[0], size[1]),
                 Event.Iconified => std.debug.warn("Iconified\n"),
                 Event.Restored => std.debug.warn("Restored\n"),
-                // Event.FileDroppped => |path| std.debug.warn("FileDroppped: {}\n", path),
+                Event.FileDroppped => |path| {
+                    std.debug.warn("FileDroppped: {}\n", path);
+                    w.allocator.free(path);
+                },
                 else => {
                     std.debug.warn("invalid event\n");
                 },

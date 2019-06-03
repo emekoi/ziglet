@@ -6,8 +6,9 @@
 
 const std = @import("std");
 
-const super = @import("../index.zig");
+const windows = @import("../../windows.zig");
 const native = @import("../native.zig");
+const internals = @import("../../../internals.zig");
 
 const HGLRC = HANDLE;
 const PROC = *@OpaqueType();
@@ -52,32 +53,32 @@ const PFNWGLCREATECONTEXTATTRIBSARBPROC = ?stdcallcc fn (HDC, HGLRC, ?*const c_i
 const PFNWGLCHOOSEPIXELFORMATARBPROC = ?stdcallcc fn (HDC, ?*const c_int, ?*const FLOAT, UINT, ?*c_int, ?*UINT) BOOL;
 
 const PIXELFORMATDESCRIPTOR = extern struct {
-    nSize: WORD,
-    nVersion: WORD,
-    dwFlags: DWORD,
-    iPixelType: BYTE,
-    cColorBits: BYTE,
-    cRedBits: BYTE,
-    cRedShift: BYTE,
-    cGreenBits: BYTE,
-    cGreenShift: BYTE,
-    cBlueBits: BYTE,
-    cBlueShift: BYTE,
-    cAlphaBits: BYTE,
-    cAlphaShift: BYTE,
-    cAccumBits: BYTE,
-    cAccumRedBits: BYTE,
-    cAccumGreenBits: BYTE,
-    cAccumBlueBits: BYTE,
-    cAccumAlphaBits: BYTE,
-    cDepthBits: BYTE,
-    cStencilBits: BYTE,
-    cAuxBuffers: BYTE,
-    iLayerType: BYTE,
-    bReserved: BYTE,
-    dwLayerMask: DWORD,
-    dwVisibleMask: DWORD,
-    dwDamageMask: DWORD,
+    nSize: WORD = @sizeOf(PIXELFORMATDESCRIPTOR),
+    nVersion: WORD = 1,
+    dwFlags: DWORD = 0,
+    iPixelType: BYTE = PFD_TYPE_RGBA,
+    cColorBits: BYTE = 32,
+    cRedBits: BYTE = 0,
+    cRedShift: BYTE = 0,
+    cGreenBits: BYTE = 0,
+    cGreenShift: BYTE = 0,
+    cBlueBits: BYTE = 0,
+    cBlueShift: BYTE = 0,
+    cAlphaBits: BYTE = 8,
+    cAlphaShift: BYTE = 0,
+    cAccumBits: BYTE = 0,
+    cAccumRedBits: BYTE = 0,
+    cAccumGreenBits: BYTE = 0,
+    cAccumBlueBits: BYTE = 0,
+    cAccumAlphaBits: BYTE = 0,
+    cDepthBits: BYTE = 24,
+    cStencilBits: BYTE = 0,
+    cAuxBuffers: BYTE = 0,
+    iLayerType: BYTE = PFD_MAIN_PLANE,
+    bReserved: BYTE = 0,
+    dwLayerMask: DWORD = 0,
+    dwVisibleMask: DWORD = 0,
+    dwDamageMask: DWORD = 0,
 };
 
 extern "gdi32" stdcallcc fn StretchDIBits(hdc: HDC, xDest: c_int, yDest: c_int, DestWidth: c_int, DestHeight: c_int, xSrc: c_int, ySrc: c_int, SrcWidth: c_int, SrcHeight: c_int, lpBits: ?*const c_void, lpbmi: ?*const BITMAPINFO, iUsage: UINT, rop: DWORD) c_int;
@@ -88,7 +89,7 @@ extern "gdi32" stdcallcc fn SetPixelFormat(hdc: HDC, format: c_int, ppfd: ?*cons
 
 extern "opengl32" stdcallcc fn wglCreateContext(arg0: HDC) ?HGLRC;
 
-extern "opengl32" stdcallcc fn wglMakeCurrent(arg0: HDC, arg1: HGLRC) BOOL;
+extern "opengl32" stdcallcc fn wglMakeCurrent(arg0: ?HDC, arg1: ?HGLRC) BOOL;
 
 extern "opengl32" stdcallcc fn wglDeleteContext(arg0: HGLRC) BOOL;
 
@@ -110,78 +111,52 @@ pub const Context = struct {
     hDc: native.HDC,
     hWnd: native.HWND,
 
-    stdcallcc fn wnd_proc(hWnd: native.HWND, msg: native.UINT, wParam: native.WPARAM, lParam: native.LPARAM) native.LRESULT {
-        return native.DefWindowProcW(hWnd, msg, wParam, lParam);
-    }
-
     pub fn dummy_init(window: *const super.Window) !Context {
-        var result: Context = undefined;
+        var wcex: native.WNDCLASSEX = native.WNDCLASSEX{};
+        var class_name: [18]u16 = undefined;
+        wcex.style = native.OWN_DC;
+        wcex.hInstace = native.kernel32.GetModuleHandleW(null);
+        wcex.lpszClassName = internals.toWide(&class_name, "ziglet_wgl_loader").ptr;
+        if (native.RegisterClassExW(&wcex) == 0) {
+            return error.InitError;
+        }
 
-        result.dummy_hWnd = CreateWindowExW(CLASS_NAME.ptr, CLASS_NAME.ptr, WS_CLIPCHILDREN | WS_CLIPSIBLINGS, 0, 0, 1, 1, null, null, native.GetModuleHandleW(null), null) orelse return error.InitError;
+        var dummy_wnd = CreateWindowExW(0, wcex.lpszClassName, 0, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, null, null, wcex.hInstace, null) orelse return error.InitError;
+        var dummy_dc = GetDC(dummy_wnd);
 
-        result.dummy_hDc = GetDC(dummy_wnd);
-
-        result.dummy_pfd = PIXELFORMATDESCRIPTOR{
-            .nSize = @sizeOf(PIXELFORMATDESCRIPTOR),
-            .nVersion = 1,
+        var dummy_pfd = PIXELFORMATDESCRIPTOR{
             .dwFlags = PFD_DOUBLEBUFFER | PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL,
-            .iPixelType = PFD_TYPE_RGBA,
-            .cColorBits = 32,
-            .cRedBits = 0,
-            .cRedShift = 0,
-            .cGreenBits = 0,
-            .cGreenShift = 0,
-            .cBlueBits = 0,
-            .cBlueShift = 0,
-            .cAlphaBits = 0,
-            .cAlphaShift = 0,
-            .cAccumBits = 0,
-            .cAccumRedBits = 0,
-            .cAccumGreenBits = 0,
-            .cAccumBlueBits = 0,
-            .cAccumAlphaBits = 0,
-            .cDepthBits = 0,
-            .cStencilBits = 0,
-            .cAuxBuffers = 0,
-            .iLayerType = PFD_MAIN_PLANE,
-            .bReserved = 0,
-            .dwLayerMask = 0,
-            .dwVisibleMask = 0,
-            .dwDamageMask = 0,
         };
 
-        result.dummy_pfdid = ChoosePixelFormat(result.dummy_hDc, &result.dummy_pfd);
+        var dummy_pfdid = ChoosePixelFormat(dummy_dc, &dummy_pfd);
 
         if (result.dummy_pfdid == 0) {
             return error.InitError;
         }
 
-        if (SetPixelFormat(result.dummy_hDc, result.dummy_hDc, &result.dummy_pfd) == FALSE) {
+        if (SetPixelFormat(dummy_dc, dummy_pfdid, &dummy_pfd) == FALSE) {
             return error.InitError;
         }
 
-        if (wglCreateContext(result.dummy_hDc)) |hRc| {
-            result.dummy_hRc = hRc;
-        } else return error.InitError;
+        var dummy_glc = wglCreateContext(dummy_dc) orelse return error.InitError;
 
-        if (wglMakeCurrent(result.dummy_hDc, result.dummy_hRc) == FALSE) {
+        if (wglMakeCurrent(dummy_dc, dummy_glc) == FALSE) {
             return error.InitError;
         }
 
-        return result;
-    }
+        // load opengl functions here https://github.com/ApoorvaJ/Papaya/blob/3808e39b0f45d4ca4972621c847586e4060c042a/src/libs/gl_lite.h
+        // use metaprogramming to make it easier
 
-    fn dummy_deinit(self: Context) !void {
         if (wglMakeCurrent(null, null) == FALSE) {
             return error.InitError;
         }
-        if (wglDeleteContext(self.dummy_hRC)) {
+        if (wglDeleteContext(dummy_glc)) {
             return error.InitError;
         }
-        if (ReleaseDC(self.dummy_hWnd, self.dummy_hDc) == FALSE) {
+        if (ReleaseDC(dummy_wnd, dummy_dc) == FALSE) {
             return error.InitError;
         }
-        if (DestroyWindow(self.dummy_hWnd) == FALSE) {
+        if (DestroyWindow(dummy_wnd) == FALSE) {
             return error.InitError;
         }
     }

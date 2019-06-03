@@ -256,7 +256,7 @@ pub const WindowImpl = struct {
 
                 var index: c_uint = 0;
                 while (index < count) : (index += 1) {
-                    var in_buffer = []u16{0} ** (std.os.MAX_PATH_BYTES / 3 + 1);
+                    var in_buffer: [native.PATH_MAX_WIDE]u16 = undefined;
                     var len = native.DragQueryFileW(hDrop, index, in_buffer[0..].ptr, in_buffer.len);
                     var res = std.unicode.utf16leToUtf8Alloc(window.allocator, in_buffer[0..len]) catch unreachable;
                     window.event_pump.push(Event{
@@ -279,18 +279,13 @@ pub const WindowImpl = struct {
         const wtitle = internals.toWide(&wide_title, options.title);
 
         const wcex = native.WNDCLASSEX{
-            .cbSize = @sizeOf(native.WNDCLASSEX),
             .style = native.CS_HREDRAW | native.CS_VREDRAW | native.CS_OWNDC,
             .lpfnWndProc = wnd_proc,
-            .cbClsExtra = 0,
-            .cbWndExtra = 0,
-            .hInstance = native.GetModuleHandleW(null),
+            .hInstance = native.kernel32.GetModuleHandleW(null),
             .hIcon = native.LoadIconW(null, native.IDI_WINLOGO).?,
             .hCursor = native.LoadCursorW(null, native.IDC_ARROW).?,
             .hbrBackground = native.HBRUSH(native.GetStockObject(native.NULL_BRUSH)),
-            .lpszMenuName = null,
             .lpszClassName = wtitle.ptr,
-            .hIconSm = null,
         };
 
         if (native.RegisterClassExW(&wcex) == 0) {
@@ -378,7 +373,7 @@ pub const WindowImpl = struct {
             _ = native.ShowCursor(native.TRUE);
         }
         var wide_title = []u16{0} ** 512;
-        _ = native.UnregisterClassW(internals.toWide(&wide_title, window.options.title).ptr, native.GetModuleHandleW(null));
+        _ = native.UnregisterClassW(internals.toWide(&wide_title, window.options.title).ptr, native.kernel32.GetModuleHandleW(null));
     }
 
     pub fn update(self: *WindowImpl) !void {

@@ -6,7 +6,7 @@
 
 const std = @import("std");
 
-pub use std.os.windows;
+pub usingnamespace std.os.windows;
 
 pub const ATOM = u16;
 
@@ -159,18 +159,18 @@ pub const NULL_BRUSH = 5;
 pub const WNDPROC = stdcallcc fn (HWND, UINT, WPARAM, LPARAM) LRESULT;
 
 pub const WNDCLASSEX = extern struct {
-    cbSize: UINT,
-    style: UINT,
-    lpfnWndProc: ?WNDPROC,
-    cbClsExtra: c_int,
-    cbWndExtra: c_int,
-    hInstance: HMODULE,
-    hIcon: ?HICON,
-    hCursor: ?HCURSOR,
-    hbrBackground: ?HBRUSH,
-    lpszMenuName: ?[*]const WCHAR,
-    lpszClassName: [*]const WCHAR,
-    hIconSm: ?HICON,
+    cbSize: UINT = @sizeOf(WNDCLASSEX),
+    style: UINT = 0,
+    lpfnWndProc: WNDPROC = DefWindowProcW,
+    cbClsExtra: INT = 0,
+    cbWndExtra: INT = 0,
+    hInstance: ?HMODULE = null,
+    hIcon: ?HICON = null,
+    hCursor: ?HCURSOR = null,
+    hbrBackground: ?HBRUSH = null,
+    lpszMenuName: ?[*]const WCHAR = null,
+    lpszClassName: ?[*]const WCHAR = null,
+    hIconSm: ?HICON = null,
 };
 
 pub const RECT = extern struct {

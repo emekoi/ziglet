@@ -21,10 +21,6 @@ pub fn main() !void {
     defer direct_allocator.deinit();
 
     const opts = ziglet.app.WindowOptions{
-        .backend = ziglet.gfx.Backend{ .OpenGL = .GL3_3 },
-        .fullscreen = false,
-        .borderless = false,
-        .resizeable = true,
         .width = 512,
         .height = 512,
         .title = "hello_world",
@@ -71,6 +67,6 @@ pub fn main() !void {
             }
         }
 
-        std.os.time.sleep(16666667);
+        std.time.sleep(16666667);
     }
 }

@@ -13,6 +13,7 @@ const ziglet = @import("ziglet.zig");
 
 const WindowImpl = switch (builtin.os) {
     .windows => @import("app/windows.zig").WindowImpl,
+    .wasi => @import("app/wasi.zig").WindowImpl,
     else => @compileError("unsupport OS"),
 };
 
@@ -20,13 +21,13 @@ const gfx = ziglet.gfx;
 const mem = std.mem;
 
 pub const WindowOptions = struct {
-    backend: gfx.Backend,
-    fullscreen: bool,
-    borderless: bool,
-    resizeable: bool,
+    backend: gfx.Backend = gfx.Backend{ .OpenGL = .GL3_3 },
+    fullscreen: bool = false,
+    borderless: bool = false,
+    resizeable: bool = false,
     width: usize,
     height: usize,
-    title: []const u8,
+    title: []const u8 = "ziglet",
 };
 
 pub const Window = struct {

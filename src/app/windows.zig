@@ -141,7 +141,7 @@ pub const WindowImpl = struct {
             if ((new_width != w.options.width) or (new_height != w.options.height)) {
                 w.options.width = new_width;
                 w.options.height = new_height;
-                return []i32{
+                return [_]i32{
                     @intCast(i32, new_width),
                     @intCast(i32, new_height),
                 };
@@ -201,7 +201,7 @@ pub const WindowImpl = struct {
                 if (window.mouse_tracked) {
                     const scroll = @intToFloat(f32, @intCast(i16, @truncate(u16, (@truncate(u32, wParam) >> 16) & 0xffff))) * 0.1;
                     window.event_pump.push(Event{
-                        .MouseScroll = []f32{ 0.0, scroll },
+                        .MouseScroll = [_]f32{ 0.0, scroll },
                     }) catch unreachable;
                 }
             },
@@ -209,7 +209,7 @@ pub const WindowImpl = struct {
                 if (window.mouse_tracked) {
                     const scroll = @intToFloat(f32, @intCast(i16, @truncate(u16, (@truncate(u32, wParam) >> 16) & 0xffff))) * 0.1;
                     window.event_pump.push(Event{
-                        .MouseScroll = []f32{ scroll, 0.0 },
+                        .MouseScroll = [_]f32{ scroll, 0.0 },
                     }) catch unreachable;
                 }
             },
@@ -224,7 +224,7 @@ pub const WindowImpl = struct {
                     window.event_pump.push(Event.MouseEnter) catch unreachable;
                 }
                 window.event_pump.push(Event{
-                    .MouseMove = []f32{
+                    .MouseMove = [_]f32{
                         @bitCast(f32, native.GET_X_LPARAM(lParam)),
                         @bitCast(f32, native.GET_Y_LPARAM(lParam)),
                     },
@@ -275,7 +275,7 @@ pub const WindowImpl = struct {
     }
 
     fn open_window(options: ziglet.app.WindowOptions) !native.HWND {
-        var wide_title = []u16{0} ** 512;
+        var wide_title = [_]u16{0} ** 512;
         const wtitle = internals.toWide(&wide_title, options.title);
 
         const wcex = native.WNDCLASSEX{
@@ -372,7 +372,7 @@ pub const WindowImpl = struct {
             _ = native.ChangeDisplaySettingsW(null, 0);
             _ = native.ShowCursor(native.TRUE);
         }
-        var wide_title = []u16{0} ** 512;
+        var wide_title = [_]u16{0} ** 512;
         _ = native.UnregisterClassW(internals.toWide(&wide_title, window.options.title).ptr, native.kernel32.GetModuleHandleW(null));
     }
 

@@ -39,22 +39,29 @@ fn nextPowerOf2(x: usize) usize {
 }
 
 pub fn RingBuffer(comptime T: type) type {
-    return AlignedRingBuffer(T, @alignOf(T));
+    return AlignedRingBuffer(T, null);
 }
 
-pub fn AlignedRingBuffer(comptime T: type, comptime A: u29) type {
+pub fn AlignedRingBuffer(comptime T: type, comptime alignment: ?u29) type {
+    if (alignment) |a| {
+        if (a == @alignOf(T)) {
+            return AlignedRingBuffer(T, null);
+        }
+    }
+
     return struct {
+        pub const Slice = if (alignment) |a| ([]align(a) ?T) else []?T;
         const Self = @This();
 
         allocator: *Allocator,
-        items: []align(A) ?T,
+        items: Slice,
         write: usize,
         read: usize,
 
         pub fn init(allocator: *Allocator) Self {
             return Self{
                 .allocator = allocator,
-                .items = []align(A) ?T{},
+                .items = [_]?T {},
                 .write = 0,
                 .read = 0,
             };

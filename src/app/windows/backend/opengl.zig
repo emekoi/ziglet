@@ -85,6 +85,8 @@ extern "gdi32" stdcallcc fn StretchDIBits(hdc: HDC, xDest: c_int, yDest: c_int, 
 
 extern "gdi32" stdcallcc fn ChoosePixelFormat(hdc: HDC, ppfd: ?*const PIXELFORMATDESCRIPTOR) c_int;
 
+extern "gdi32" stdcallcc fn DescribePixelFormat(hdc: HDC, iPixelFormat: c_int, nBytes: UINT, ppfd: *PIXELFORMATDESCRIPTOR) c_int;
+
 extern "gdi32" stdcallcc fn SetPixelFormat(hdc: HDC, format: c_int, ppfd: ?*const PIXELFORMATDESCRIPTOR) BOOL;
 
 extern "opengl32" stdcallcc fn wglCreateContext(arg0: HDC) ?HGLRC;
@@ -111,6 +113,30 @@ pub const Context = struct {
     hDc: native.HDC,
     hWnd: native.HWND,
 
+    fn setPixelFormat(dc: native.HDC, dummy: bool) !void {
+        var pixel_format: c_int = undefined;
+
+        if (dummy) {
+            var pfd = PIXELFORMATDESCRIPTOR{
+                .dwFlags = PFD_DOUBLEBUFFER | PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL,
+            };
+
+            pixel_format = ChoosePixelFormat(dc, &pfd);
+
+            if (pixel_format == 0) {
+                return error.InitError;
+            }
+        } else {
+            
+        }
+
+        var pixel_format_desc: PIXELFORMATDESCRIPTOR = PIXELFORMATDESCRIPTOR{};
+        DescribePixelFormat(dc, pixel_format, @sizeOf(PIXELFORMATDESCRIPTOR), &pixel_format_desc);
+        if (SetPixelFormat(dc, pixel_format, &pixel_format_desc) == FALSE) {
+            return error.InitError;
+        }
+    }
+
     pub fn dummy_init(window: *const super.Window) !Context {
         var wcex: native.WNDCLASSEX = native.WNDCLASSEX{};
         var class_name: [18]u16 = undefined;
@@ -123,20 +149,6 @@ pub const Context = struct {
 
         var dummy_wnd = CreateWindowExW(0, wcex.lpszClassName, 0, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, null, null, wcex.hInstace, null) orelse return error.InitError;
         var dummy_dc = GetDC(dummy_wnd);
-
-        var dummy_pfd = PIXELFORMATDESCRIPTOR{
-            .dwFlags = PFD_DOUBLEBUFFER | PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL,
-        };
-
-        var dummy_pfdid = ChoosePixelFormat(dummy_dc, &dummy_pfd);
-
-        if (result.dummy_pfdid == 0) {
-            return error.InitError;
-        }
-
-        if (SetPixelFormat(dummy_dc, dummy_pfdid, &dummy_pfd) == FALSE) {
-            return error.InitError;
-        }
 
         var dummy_glc = wglCreateContext(dummy_dc) orelse return error.InitError;
 

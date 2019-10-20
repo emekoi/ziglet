@@ -16,9 +16,7 @@ const Event = app.event.Event;
 const Window = app.Window;
 
 pub fn main() !void {
-    var direct_allocator = std.heap.DirectAllocator.init();
-    var alloc = &direct_allocator.allocator;
-    defer direct_allocator.deinit();
+    var alloc = std.heap.direct_allocator;
 
     const opts = ziglet.app.WindowOptions{
         .width = 512,

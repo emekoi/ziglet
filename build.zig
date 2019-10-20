@@ -14,7 +14,7 @@ pub const Example = struct {
     }
 };
 
-const examples = []const Example{Example.new("events", "examples/events.zig", null)};
+const examples = [_]Example{Example.new("events", "examples/events.zig", null)};
 
 pub fn build(builder: *Builder) void {
     const mode = builder.standardReleaseOptions();
@@ -38,7 +38,7 @@ pub fn build(builder: *Builder) void {
 
     // formatting source files
     const fmt_step = builder.step("fmt", "format source files");
-    const fmt_run = builder.addSystemCommand([]const []const u8{
+    const fmt_run = builder.addSystemCommand([_][]const u8{
         builder.zig_exe, "fmt", "examples", "src", "build.zig",
     });
     fmt_step.dependOn(&fmt_run.step);

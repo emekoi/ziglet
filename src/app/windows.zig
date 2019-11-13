@@ -7,7 +7,8 @@
 const std = @import("std");
 const ziglet = @import("../ziglet.zig");
 const internals = @import("../internals.zig");
-const native = @import("windows/native.zig");
+const native = @import("../native/windows.zig");
+const backend = @import("windows/backend.zig");
 
 const mem = std.mem;
 const app = ziglet.app;
@@ -17,9 +18,16 @@ pub const Event = app.event.Event;
 pub const Key = app.event.Key;
 pub const MouseButton = app.event.MouseButton;
 
-const Backend = union(ziglet.gfx.RenderBackend) {
-    OpenGL: @import("backend/opengl.zig").Context,
-    DirectX11: @import("backend/directx.zig").Context,
+const Backend = union(enum) {
+    OpenGL: backend.opengl.Context,
+    DirectX11: backend.directx11.Context,
+
+    fn new(self: @TagType(Backend), options: app.Options) !void {
+        return switch (self) {
+            .DirectX11 => .{ .DirectX11 = backend.directx11.Context.init(opt) },
+            else => @compileError("unsupported backend"),
+        };
+    }
 };
 
 fn intToKey(lParam: native.LPARAM) Key {
@@ -131,6 +139,7 @@ fn intToKey(lParam: native.LPARAM) Key {
 
 pub const WindowImpl = struct {
     handle: native.HWND,
+    backend: Backend,
 
     fn window_resized(self: *WindowImpl) ?[2]i32 {
         var w = @fieldParentPtr(app.Window, "impl", self);
@@ -167,42 +176,42 @@ pub const WindowImpl = struct {
                 window.should_close = true;
             },
             native.WM_SYSKEYDOWN, native.WM_KEYDOWN => {
-                window.event_pump.push(Event{ .KeyDown = intToKey(lParam >> 16) }) catch unreachable;
+                window.event_pump.push(Event{ .KeyDown = intToKey(lParam >> 16) });
             },
             native.WM_SYSKEYUP, native.WM_KEYUP => {
-                window.event_pump.push(Event{ .KeyUp = intToKey(lParam >> 16) }) catch unreachable;
+                window.event_pump.push(Event{ .KeyUp = intToKey(lParam >> 16) });
             },
             native.WM_SYSCHAR, native.WM_CHAR => {
-                window.event_pump.push(Event{ .Char = @intCast(u8, wParam) }) catch unreachable;
+                window.event_pump.push(Event{ .Char = @intCast(u8, wParam) });
             },
             native.WM_LBUTTONDOWN => {
-                window.event_pump.push(Event{ .MouseDown = MouseButton.Left }) catch unreachable;
+                window.event_pump.push(Event{ .MouseDown = MouseButton.Left });
             },
             native.WM_RBUTTONDOWN => {
-                window.event_pump.push(Event{ .MouseDown = MouseButton.Right }) catch unreachable;
+                window.event_pump.push(Event{ .MouseDown = MouseButton.Right });
             },
             native.WM_MBUTTONDOWN => {
                 window.event_pump.push(Event{
                     .MouseDown = MouseButton.Middle,
-                }) catch unreachable;
+                });
             },
             native.WM_LBUTTONUP => {
-                window.event_pump.push(Event{ .MouseUp = MouseButton.Left }) catch unreachable;
+                window.event_pump.push(Event{ .MouseUp = MouseButton.Left });
             },
             native.WM_RBUTTONUP => {
-                window.event_pump.push(Event{ .MouseUp = MouseButton.Right }) catch unreachable;
+                window.event_pump.push(Event{ .MouseUp = MouseButton.Right });
             },
             native.WM_MBUTTONUP => {
                 window.event_pump.push(Event{
                     .MouseUp = MouseButton.Middle,
-                }) catch unreachable;
+                });
             },
             native.WM_MOUSEWHEEL => {
                 if (window.mouse_tracked) {
                     const scroll = @intToFloat(f32, @intCast(i16, @truncate(u16, (@truncate(u32, wParam) >> 16) & 0xffff))) * 0.1;
                     window.event_pump.push(Event{
                         .MouseScroll = [_]f32{ 0.0, scroll },
-                    }) catch unreachable;
+                    });
                 }
             },
             native.WM_MOUSEHWHEEL => {
@@ -210,7 +219,7 @@ pub const WindowImpl = struct {
                     const scroll = @intToFloat(f32, @intCast(i16, @truncate(u16, (@truncate(u32, wParam) >> 16) & 0xffff))) * 0.1;
                     window.event_pump.push(Event{
                         .MouseScroll = [_]f32{ scroll, 0.0 },
-                    }) catch unreachable;
+                    });
                 }
             },
             native.WM_MOUSEMOVE => {
@@ -221,33 +230,33 @@ pub const WindowImpl = struct {
                     tme.dwFlags = native.TME_LEAVE;
                     tme.hwndTrack = self.handle;
                     assert(native.TrackMouseEvent(&tme) != 0);
-                    window.event_pump.push(Event.MouseEnter) catch unreachable;
+                    window.event_pump.push(Event.MouseEnter);
                 }
                 window.event_pump.push(Event{
                     .MouseMove = [_]f32{
                         @bitCast(f32, native.GET_X_LPARAM(lParam)),
                         @bitCast(f32, native.GET_Y_LPARAM(lParam)),
                     },
-                }) catch unreachable;
+                });
             },
             native.WM_MOUSELEAVE => {
                 window.mouse_tracked = false;
-                window.event_pump.push(Event.MouseLeave) catch unreachable;
+                window.event_pump.push(Event.MouseLeave);
             },
             native.WM_SIZE => {
                 const iconified = wParam == native.SIZE_MINIMIZED;
                 if (iconified != window.iconified) {
                     window.iconified = iconified;
                     if (iconified) {
-                        window.event_pump.push(Event.Iconified) catch unreachable;
+                        window.event_pump.push(Event.Iconified);
                     } else {
-                        window.event_pump.push(Event.Restored) catch unreachable;
+                        window.event_pump.push(Event.Restored);
                     }
                 }
                 if (self.window_resized()) |new_size| {
                     window.event_pump.push(Event{
                         .Resized = new_size,
-                    }) catch unreachable;
+                    });
                 }
             },
             native.WM_DROPFILES => {
@@ -261,7 +270,7 @@ pub const WindowImpl = struct {
                     var res = std.unicode.utf16leToUtf8Alloc(window.allocator, in_buffer[0..len]) catch unreachable;
                     window.event_pump.push(Event{
                         .FileDroppped = res,
-                    }) catch unreachable;
+                    });
                 }
 
                 native.DragFinish(hDrop);
@@ -274,7 +283,7 @@ pub const WindowImpl = struct {
         return result;
     }
 
-    fn open_window(options: ziglet.app.WindowOptions) !native.HWND {
+    fn open_window(options: app.WindowOptions) !native.HWND {
         var wide_title = [_]u16{0} ** 512;
         const wtitle = internals.toWide(&wide_title, options.title);
 
@@ -284,7 +293,7 @@ pub const WindowImpl = struct {
             .hInstance = native.kernel32.GetModuleHandleW(null),
             .hIcon = native.LoadIconW(null, native.IDI_WINLOGO).?,
             .hCursor = native.LoadCursorW(null, native.IDC_ARROW).?,
-            .hbrBackground = native.HBRUSH(native.GetStockObject(native.NULL_BRUSH)),
+            .hbrBackground = @as(native.HBRUSH, native.GetStockObject(native.NULL_BRUSH)),
             .lpszClassName = wtitle.ptr,
         };
 
@@ -300,7 +309,7 @@ pub const WindowImpl = struct {
         };
 
         var dwExStyle: u32 = 0;
-        var dwStyle: u32 = native.WS_CLIPSIBLINGS | native.WS_CLIPCHILDREN;
+        var dwStyle: u32 = native.WS_CLIPSIBLINGS | native.WS_CLIPCHILDREN | native.WS_VISIBLE;
 
         if (options.fullscreen) {
             var dmScreenSettings: native.DEVMODEW = undefined;
@@ -318,17 +327,17 @@ pub const WindowImpl = struct {
             }
         } else {
             dwExStyle = native.WS_EX_APPWINDOW | native.WS_EX_WINDOWEDGE | native.WS_EX_ACCEPTFILES;
-            dwStyle |= native.DWORD(native.WS_OVERLAPPEDWINDOW);
+            dwStyle |= @as(native.DWORD, native.WS_OVERLAPPEDWINDOW);
 
             if (options.resizeable) {
-                dwStyle |= native.DWORD(native.WS_THICKFRAME) | native.DWORD(native.WS_MAXIMIZEBOX);
+                dwStyle |= @as(native.DWORD, native.WS_THICKFRAME) | @as(native.DWORD, native.WS_MAXIMIZEBOX);
             } else {
-                dwStyle &= ~native.DWORD(native.WS_MAXIMIZEBOX);
-                dwStyle &= ~native.DWORD(native.WS_THICKFRAME);
+                dwStyle &= ~@as(native.DWORD, native.WS_MAXIMIZEBOX);
+                dwStyle &= ~@as(native.DWORD, native.WS_THICKFRAME);
             }
 
             if (options.borderless) {
-                dwStyle &= ~native.DWORD(native.WS_THICKFRAME);
+                dwStyle &= ~@as(native.DWORD, native.WS_THICKFRAME);
             }
         }
 
@@ -340,7 +349,6 @@ pub const WindowImpl = struct {
         rect.bottom -= rect.top;
 
         const result = native.CreateWindowExW(dwExStyle, wtitle.ptr, wtitle.ptr, dwStyle, native.CW_USEDEFAULT, native.CW_USEDEFAULT, rect.right, rect.bottom, null, null, wcex.hInstance, null) orelse return error.InitError;
-        _ = native.ShowWindow(result, native.SW_NORMAL);
 
         return result;
     }
@@ -355,15 +363,26 @@ pub const WindowImpl = struct {
         }
     }
 
-    pub fn init(self: *WindowImpl, options: ziglet.app.WindowOptions) !void {
+    fn init_backend(self: WindowImpl, options: app.Options) !Backend {
+        return switch (options.backend) {
+            .DirectX => |ver| switch (ver) {
+                .DX11_0 => Backend.new(.DirectX11, options),
+                else => @compileError("unsupported backend"),
+            },
+            else => @compileError("unsupported backend"),
+        };
+    }
+
+    pub fn init(self: *WindowImpl, options: app.WindowOptions) !void {
         self.* = WindowImpl{
-            .handle = undefined,
+            .handle = try open_window(options),
+            .backend = undefined
         };
 
-        errdefer self.deinit();
-
-        self.handle = try open_window(options);
         _ = native.SetWindowLongPtrW(self.handle, native.GWLP_USERDATA, @ptrToInt(self));
+        errdefer self.deinit();
+        self.backend = try init_backend(options);
+        
     }
 
     pub fn deinit(self: *WindowImpl) void {

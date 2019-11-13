@@ -127,7 +127,17 @@ pub const Context = struct {
                 return error.InitError;
             }
         } else {
-            
+            const attrib = [_]c_int {
+                WGL_DRAW_TO_WINDOW_ARB, GL_TRUE,
+                WGL_ACCELERATION_ARB, WGL_FULL_ACCELERATION_ARB,
+                WGL_SUPPORT_OPENGL_ARB, GL_TRUE,
+                WGL_DOUBLE_BUFFER_ARB, GL_TRUE,
+                WGL_PIXEL_TYPE_ARB, WGL_TYPE_RGBA_ARB,
+                WGL_FRAMEBUFFER_SRGB_CAPABLE_ARB, GL_TRUE,
+                0,
+            };
+
+            wglChoosePixelFormatARB(dc, attrib, 0, 1, &pixel_format, &extended_pixel_format);
         }
 
         var pixel_format_desc: PIXELFORMATDESCRIPTOR = PIXELFORMATDESCRIPTOR{};
@@ -137,40 +147,34 @@ pub const Context = struct {
         }
     }
 
-    pub fn dummy_init(window: *const super.Window) !Context {
+    fn dummy_init() !Context {
         var wcex: native.WNDCLASSEX = native.WNDCLASSEX{};
-        var class_name: [18]u16 = undefined;
+        var class_name: [("ziglet_wgl_loader").size]u16 = undefined;
         wcex.style = native.OWN_DC;
         wcex.hInstace = native.kernel32.GetModuleHandleW(null);
         wcex.lpszClassName = internals.toWide(&class_name, "ziglet_wgl_loader").ptr;
-        if (native.RegisterClassExW(&wcex) == 0) {
+        if (native.RegisterClassExW(&wcex) == FALSE) {
             return error.InitError;
         }
 
         var dummy_wnd = CreateWindowExW(0, wcex.lpszClassName, 0, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, null, null, wcex.hInstace, null) orelse return error.InitError;
+        defer _ = DestroyWindow(dummy_wnd);
+
         var dummy_dc = GetDC(dummy_wnd);
+        defer _ = ReleaseDC(dummy_wnd, dummy_dc);
+
+        try setPixelFormat(dummy_dc, true);
 
         var dummy_glc = wglCreateContext(dummy_dc) orelse return error.InitError;
+        defer _ = wglDeleteContext(dummy_glc);
 
         if (wglMakeCurrent(dummy_dc, dummy_glc) == FALSE) {
             return error.InitError;
         }
+        defer _ = wglMakeCurrent(null, null);
 
         // load opengl functions here https://github.com/ApoorvaJ/Papaya/blob/3808e39b0f45d4ca4972621c847586e4060c042a/src/libs/gl_lite.h
         // use metaprogramming to make it easier
-
-        if (wglMakeCurrent(null, null) == FALSE) {
-            return error.InitError;
-        }
-        if (wglDeleteContext(dummy_glc)) {
-            return error.InitError;
-        }
-        if (ReleaseDC(dummy_wnd, dummy_dc) == FALSE) {
-            return error.InitError;
-        }
-        if (DestroyWindow(dummy_wnd) == FALSE) {
-            return error.InitError;
-        }
     }
 
     pub fn init(self: *Context, window: *const super.Window) !void {

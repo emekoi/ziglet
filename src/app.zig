@@ -47,14 +47,13 @@ pub const Window = struct {
             .mouse_tracked = false,
             .iconified = false,
             .impl = undefined,
-            .event_pump = event.EventPump.init(allocator),
+            .event_pump = event.EventPump.new(),
         };
         errdefer self.deinit();
         try self.impl.init(options);
     }
 
     pub fn deinit(self: *Window) void {
-        self.event_pump.deinit();
         self.impl.deinit();
     }
 

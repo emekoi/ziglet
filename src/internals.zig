@@ -17,58 +17,24 @@ pub fn clamp(comptime T: type, x: T, a: T, b: T) T {
     return std.math.max(std.math.min(a, b), std.math.min(x, std.math.max(a, b)));
 }
 
-pub fn forceErr() !void {
-    var _i: i32 = 0;
-    if (_i > 1) return error.FakeError;
+pub inline fn forceErr() !void {
+    var _i: i32 = 0; if (_i > 1) return error.FakeError;
 }
 
-fn nextPowerOf2(x: usize) usize {
-    if (x == 0) return 1;
-    var result = x -% 1;
-    result = switch (@sizeOf(usize)) {
-        8 => result | (result >> 32),
-        4 => result | (result >> 16),
-        2 => result | (result >> 8),
-        1 => result | (result >> 4),
-        else => 0,
-    };
-    result |= (result >> 4);
-    result |= (result >> 2);
-    result |= (result >> 1);
-    return result +% (1 + @boolToInt(x <= 0));
-}
-
-pub fn RingBuffer(comptime T: type) type {
-    return AlignedRingBuffer(T, null);
-}
-
-pub fn AlignedRingBuffer(comptime T: type, comptime alignment: ?u29) type {
-    if (alignment) |a| {
-        if (a == @alignOf(T)) {
-            return AlignedRingBuffer(T, null);
-        }
-    }
-
+pub fn RingBuffer(comptime T: type, comptime S: usize) type {
     return struct {
-        pub const Slice = if (alignment) |a| ([]align(a) ?T) else []?T;
         const Self = @This();
 
-        allocator: *Allocator,
-        items: Slice,
+        items: [S]T,
         write: usize,
         read: usize,
 
-        pub fn init(allocator: *Allocator) Self {
+        pub fn new() Self {
             return Self{
-                .allocator = allocator,
-                .items = [_]?T {},
+                .items = [_]T {undefined} ** S,
                 .write = 0,
                 .read = 0,
             };
-        }
-
-        pub fn deinit(self: *Self) void {
-            self.allocator.free(self.items);
         }
 
         fn mask(self: Self, idx: usize) usize {
@@ -91,11 +57,7 @@ pub fn AlignedRingBuffer(comptime T: type, comptime alignment: ?u29) type {
             return self.items.len;
         }
 
-        pub fn push(self: *Self, data: T) !void {
-            if (self.full()) {
-                const new_capacity = nextPowerOf2(self.capacity() + 1);
-                self.items = try self.allocator.realloc(self.items, new_capacity);
-            }
+        pub fn push(self: *Self, data: T) void {
             self.items[self.mask(self.write)] = data;
             self.write += 1;
         }

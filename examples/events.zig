@@ -18,7 +18,7 @@ const Window = app.Window;
 pub fn main() !void {
     var alloc = std.heap.direct_allocator;
 
-    const opts = ziglet.app.WindowOptions{
+    const opts  = ziglet.app.WindowOptions {
         .width = 512,
         .height = 512,
         .title = "hello_world",

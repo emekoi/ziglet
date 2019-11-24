@@ -7,7 +7,7 @@
 const std = @import("std");
 const ziglet = @import("../ziglet.zig");
 const internals = @import("../internals.zig");
-const native = @import("../native/windows.zig");
+const native = @import("../native.zig");
 const backend = @import("windows/backend.zig");
 
 const mem = std.mem;
@@ -18,14 +18,16 @@ pub const Event = app.event.Event;
 pub const Key = app.event.Key;
 pub const MouseButton = app.event.MouseButton;
 
-const Backend = union(enum) {
+const Backend = union(@TagType(ziglet.gfx.Backend)) {
     OpenGL: backend.opengl.Context,
-    DirectX11: backend.directx11.Context,
+    DirectX: backend.directx.Context,
+    Metal,
+    WebGL,
 
-    fn new(self: @TagType(Backend), options: app.Options) !void {
-        return switch (self) {
-            .DirectX11 => .{ .DirectX11 = backend.directx11.Context.init(opt) },
-            else => @compileError("unsupported backend"),
+    fn new(window: *const WindowImpl, options: app.WindowOptions) Backend {
+        return switch (options.backend) {
+            .DirectX => .{ .DirectX = backend.directx.Context.init(window, options) },
+            else => unreachable,
         };
     }
 };
@@ -363,25 +365,22 @@ pub const WindowImpl = struct {
         }
     }
 
-    fn init_backend(self: WindowImpl, options: app.Options) !Backend {
+    fn init_backend(self: *const WindowImpl, options: app.WindowOptions) !Backend {
         return switch (options.backend) {
-            .DirectX => |ver| switch (ver) {
-                .DX11_0 => Backend.new(.DirectX11, options),
-                else => @compileError("unsupported backend"),
-            },
-            else => @compileError("unsupported backend"),
+            .DirectX => Backend.new(self, options),
+            else => error.BackendNotSupported,
         };
     }
 
     pub fn init(self: *WindowImpl, options: app.WindowOptions) !void {
-        self.* = WindowImpl{
+        self.* = .{
             .handle = try open_window(options),
             .backend = undefined
         };
 
         _ = native.SetWindowLongPtrW(self.handle, native.GWLP_USERDATA, @ptrToInt(self));
         errdefer self.deinit();
-        self.backend = try init_backend(options);
+        self.backend = try init_backend(self, options);
         
     }
 

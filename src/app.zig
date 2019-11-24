@@ -21,7 +21,7 @@ const gfx = ziglet.gfx;
 const mem = std.mem;
 
 pub const WindowOptions = struct {
-    backend: gfx.Backend = gfx.Backend{ .OpenGL = .GL3_3 },
+    backend: gfx.Backend = gfx.Backend{ .DirectX = .DX11_0 },
     fullscreen: bool = false,
     borderless: bool = false,
     resizeable: bool = false,
@@ -40,7 +40,7 @@ pub const Window = struct {
     impl: WindowImpl,
 
     pub fn init(self: *Window, allocator: *mem.Allocator, options: WindowOptions) !void {
-        self.* = Window{
+        self.* = .{
             .allocator = allocator,
             .options = options,
             .should_close = false,

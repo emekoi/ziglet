@@ -5,4 +5,4 @@
 //
 
 pub const opengl = @import("backend/opengl.zig");
-pub const directx11 = @import("backend/directx11.zig");
+pub const directx = @import("backend/directx.zig");

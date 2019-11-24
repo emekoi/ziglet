@@ -6,7 +6,7 @@ pub const Example = struct {
     input: []const u8,
 
     pub fn new(output: []const u8, input: []const u8, desc: ?[]const u8) Example {
-        return Example{
+        return .{
             .description = desc,
             .output = output,
             .input = input,
@@ -14,7 +14,7 @@ pub const Example = struct {
     }
 };
 
-const examples = [_]Example{Example.new("events", "examples/events.zig", null)};
+const examples = [_]Example{Example.new("events", "examples/events.zig", "how to use EventPumps")};
 
 pub fn build(builder: *Builder) void {
     const mode = builder.standardReleaseOptions();
@@ -32,7 +32,7 @@ pub fn build(builder: *Builder) void {
         exe.setBuildMode(mode);
 
         const run_cmd = exe.run();
-        const run_step = builder.step(builder.fmt("run-{}", example.output), example.description orelse builder.fmt("run \"{}\" example", example.output));
+        const run_step = builder.step(builder.fmt("run-{}", example.output), example.description orelse "");
         run_step.dependOn(&run_cmd.step);
     }
 

@@ -7,8 +7,9 @@
 const std = @import("std");
 
 const windows = @import("../../windows.zig");
-const native = @import("../native.zig");
 const internals = @import("../../../internals.zig");
+
+usingnamespace @import("../../../native.zig");
 
 const HGLRC = HANDLE;
 const PROC = *@OpaqueType();
@@ -103,17 +104,17 @@ pub const OpenGLError = error{
 };
 
 pub const Context = struct {
-    dummy_hRC: native.HGLRC,
-    dummy_hDc: native.HDC,
+    dummy_hRC: HGLRC,
+    dummy_hDc: HDC,
     dummy_pfd: PIXELFORMATDESCRIPTOR,
     dummy_pfdid: c_int,
-    dummy_hWnd: native.HWND,
+    dummy_hWnd: HWND,
 
     hRC: HGLRC,
-    hDc: native.HDC,
-    hWnd: native.HWND,
+    hDc: HDC,
+    hWnd: HWND,
 
-    fn setPixelFormat(dc: native.HDC, dummy: bool) !void {
+    fn setPixelFormat(dc: HDC, dummy: bool) !void {
         var pixel_format: c_int = undefined;
 
         if (dummy) {
@@ -140,7 +141,7 @@ pub const Context = struct {
             wglChoosePixelFormatARB(dc, attrib, 0, 1, &pixel_format, &extended_pixel_format);
         }
 
-        var pixel_format_desc: PIXELFORMATDESCRIPTOR = PIXELFORMATDESCRIPTOR{};
+        var pixel_format_desc = PIXELFORMATDESCRIPTOR{};
         DescribePixelFormat(dc, pixel_format, @sizeOf(PIXELFORMATDESCRIPTOR), &pixel_format_desc);
         if (SetPixelFormat(dc, pixel_format, &pixel_format_desc) == FALSE) {
             return error.InitError;
@@ -148,12 +149,12 @@ pub const Context = struct {
     }
 
     fn dummy_init() !Context {
-        var wcex: native.WNDCLASSEX = native.WNDCLASSEX{};
+        var wcex = WNDCLASSEX{};
         var class_name: [("ziglet_wgl_loader").size]u16 = undefined;
-        wcex.style = native.OWN_DC;
-        wcex.hInstace = native.kernel32.GetModuleHandleW(null);
+        wcex.style = OWN_DC;
+        wcex.hInstace = kernel32.GetModuleHandleW(null);
         wcex.lpszClassName = internals.toWide(&class_name, "ziglet_wgl_loader").ptr;
-        if (native.RegisterClassExW(&wcex) == FALSE) {
+        if (RegisterClassExW(&wcex) == FALSE) {
             return error.InitError;
         }
 

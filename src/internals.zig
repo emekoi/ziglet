@@ -30,7 +30,7 @@ pub fn RingBuffer(comptime T: type, comptime S: usize) type {
         read: usize,
 
         pub fn new() Self {
-            return Self{
+            return .{
                 .items = [_]T {undefined} ** S,
                 .write = 0,
                 .read = 0,

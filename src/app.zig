@@ -11,7 +11,7 @@ pub const event = @import("app/event.zig");
 const internals = @import("internals.zig");
 const ziglet = @import("ziglet.zig");
 
-const WindowImpl = switch (builtin.os) {
+const WindowImpl = switch (builtin.os.tag) {
     .windows => @import("app/windows.zig").WindowImpl,
     .wasi => @import("app/wasi.zig").WindowImpl,
     else => @compileError("unsupport OS"),

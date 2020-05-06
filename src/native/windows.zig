@@ -12,29 +12,27 @@ pub const ATOM = u16;
 
 pub const LONG_PTR = usize;
 
-pub const HWND = HANDLE;
+// pub const HWND = HANDLE;
 
-pub const HICON = HANDLE;
+// pub const HICON = HANDLE;
 
-pub const HCURSOR = HANDLE;
+// pub const HCURSOR = HANDLE;
 
-pub const HBRUSH = HANDLE;
+// pub const HBRUSH = HANDLE;
 
-pub const HMENU = HANDLE;
+// pub const HMENU = HANDLE;
 
 pub const HDC = HANDLE;
 
 pub const HDROP = HANDLE;
 
-pub const HGDIOBJ = HANDLE;
+pub const HGDIOBJ = HBRUSH;
 
-pub const LPARAM = LONG_PTR;
+// pub const LPARAM = LONG_PTR;
 
-pub const WPARAM = LONG_PTR;
+// pub const WPARAM = LONG_PTR;
 
-pub const LRESULT = LONG_PTR;
-
-pub const MAKEINTRESOURCE = [*]WCHAR;
+// pub const LRESULT = LONG_PTR;
 
 pub const CS_VREDRAW = 1;
 
@@ -84,9 +82,9 @@ pub const WM_DROPFILES = 563;
 
 pub const WM_MOUSELEAVE = 675;
 
-pub const IDC_ARROW = @intToPtr(MAKEINTRESOURCE, 32512);
+pub const IDC_ARROW = MAKEINTRESOURCEW(32512);
 
-pub const IDI_WINLOGO = @intToPtr(MAKEINTRESOURCE, 32517);
+pub const IDI_WINLOGO = MAKEINTRESOURCEW(32517);
 
 pub const CW_USEDEFAULT = -1;
 
@@ -158,7 +156,7 @@ pub const TME_LEAVE = 2;
 
 pub const NULL_BRUSH = 5;
 
-pub const WNDPROC = stdcallcc fn (HWND, UINT, WPARAM, LPARAM) LRESULT;
+pub const WNDPROC = fn (HWND, UINT, WPARAM, LPARAM) callconv(.Stdcall) LRESULT;
 
 pub const WNDCLASSEX = extern struct {
     cbSize: UINT = @sizeOf(WNDCLASSEX),
@@ -266,43 +264,43 @@ pub const TRACKMOUSEEVENT = extern struct {
     dwHoverTime: DWORD,
 };
 
-pub extern "user32" stdcallcc fn LoadCursorW(hInstance: ?HINSTANCE, lpCursorName: LPCWSTR) ?HCURSOR;
+pub extern "user32" fn LoadCursorW(hInstance: ?HINSTANCE, lpCursorName: LPCWSTR) callconv(.Stdcall) ?HCURSOR;
 
-pub extern "user32" stdcallcc fn LoadIconW(hInstance: ?HINSTANCE, lpIconName: LPCWSTR) ?HICON;
+pub extern "user32" fn LoadIconW(hInstance: ?HINSTANCE, lpIconName: LPCWSTR) callconv(.Stdcall) ?HICON;
 
-pub extern "user32" stdcallcc fn RegisterClassExW(lpWndClassEx: *const WNDCLASSEX) ATOM;
+pub extern "user32" fn RegisterClassExW(lpWndClassEx: *const WNDCLASSEX) callconv(.Stdcall) ATOM;
 
-pub extern "user32" stdcallcc fn UnregisterClassW(lpClassName: LPCWSTR, hInstance: HMODULE) BOOL;
+pub extern "user32" fn UnregisterClassW(lpClassName: LPCWSTR, hInstance: ?HMODULE) callconv(.Stdcall) BOOL;
 
-pub extern "user32" stdcallcc fn AdjustWindowRect(lpRect: *RECT, dwStyle: DWORD, bMenu: BOOL) BOOL;
+pub extern "user32" fn AdjustWindowRect(lpRect: *RECT, dwStyle: DWORD, bMenu: BOOL) callconv(.Stdcall) BOOL;
 
-pub extern "user32" stdcallcc fn GetClientRect(wnd: HWND, lpRect: *RECT) BOOL;
+pub extern "user32" fn GetClientRect(wnd: HWND, lpRect: *RECT) callconv(.Stdcall) BOOL;
 
-pub extern "user32" stdcallcc fn CreateWindowExW(dwExStyle: DWORD, lpClassName: LPCWSTR, lpWindowName: LPCWSTR, dwStyle: DWORD, X: c_int, Y: c_int, nWidth: c_int, nHeight: c_int, hWndParent: ?HWND, menu: ?HMENU, hInstance: ?HMODULE, lpParam: ?LPVOID) ?HWND;
+pub extern "user32" fn CreateWindowExW(dwExStyle: DWORD, lpClassName: LPCWSTR, lpWindowName: LPCWSTR, dwStyle: DWORD, X: c_int, Y: c_int, nWidth: c_int, nHeight: c_int, hWndParent: ?HWND, menu: ?HMENU, hInstance: ?HMODULE, lpParam: ?LPVOID) callconv(.Stdcall) ?HWND;
 
-pub extern "user32" stdcallcc fn DestroyWindow(wnd: HWND) BOOL;
+pub extern "user32" fn DestroyWindow(wnd: HWND) callconv(.Stdcall) BOOL;
 
-pub extern "user32" stdcallcc fn ShowWindow(wnd: HWND, nCmdShow: c_int) BOOL;
+pub extern "user32" fn ShowWindow(wnd: HWND, nCmdShow: c_int) callconv(.Stdcall) BOOL;
 
-pub extern "user32" stdcallcc fn GetDC(wnd: HWND) ?HDC;
+pub extern "user32" fn GetDC(wnd: HWND) callconv(.Stdcall) ?HDC;
 
-pub extern "user32" stdcallcc fn ReleaseDC(wnd: HWND, hDC: HDC) c_int;
+pub extern "user32" fn ReleaseDC(wnd: HWND, hDC: HDC) callconv(.Stdcall) c_int;
 
-pub extern "user32" stdcallcc fn PeekMessageW(lpMsg: *MSG, wnd: HWND, wMsgFilterMin: UINT, wMsgFilterMax: UINT, wRemoveMsg: UINT) BOOL;
+pub extern "user32" fn PeekMessageW(lpMsg: *MSG, wnd: HWND, wMsgFilterMin: UINT, wMsgFilterMax: UINT, wRemoveMsg: UINT) callconv(.Stdcall) BOOL;
 
-pub extern "user32" stdcallcc fn SendMessageW(hWnd: HWND, Msg: UINT, wParam: WPARAM, lParam: LPARAM) LRESULT;
+pub extern "user32" fn SendMessageW(hWnd: HWND, Msg: UINT, wParam: WPARAM, lParam: LPARAM) callconv(.Stdcall) LRESULT;
 
-pub extern "user32" stdcallcc fn TranslateMessage(lpMsg: *MSG) BOOL;
+pub extern "user32" fn TranslateMessage(lpMsg: *MSG) callconv(.Stdcall) BOOL;
 
-pub extern "user32" stdcallcc fn DispatchMessageW(lpMsg: *MSG) LONG;
+pub extern "user32" fn DispatchMessageW(lpMsg: *MSG) callconv(.Stdcall) LONG;
 
-pub extern "user32" stdcallcc fn DefWindowProcW(wnd: HWND, msg: UINT, wp: WPARAM, lp: LPARAM) LRESULT;
+pub extern "user32" fn DefWindowProcW(wnd: HWND, msg: UINT, wp: WPARAM, lp: LPARAM) callconv(.Stdcall) LRESULT;
 
-pub extern "user32" stdcallcc fn GetWindowLongPtrW(hWnd: HWND, nIndex: c_int) LONG_PTR;
+pub extern "user32" fn GetWindowLongPtrW(hWnd: HWND, nIndex: c_int) callconv(.Stdcall) LONG_PTR;
 
-pub extern "user32" stdcallcc fn SetWindowLongPtrW(hWnd: HWND, nIndex: c_int, dwNewLong: LONG_PTR) LONG_PTR;
+pub extern "user32" fn SetWindowLongPtrW(hWnd: HWND, nIndex: c_int, dwNewLong: LONG_PTR) callconv(.Stdcall) LONG_PTR;
 
-pub extern "user32" stdcallcc fn SetWindowTextW(hWnd: HWND, lpString: LPCWSTR) BOOL;
+pub extern "user32" fn SetWindowTextW(hWnd: HWND, lpString: LPCWSTR) callconv(.Stdcall) BOOL;
 
 // pub extern "user32" stdcallcc fn SetWindowPos(hWnd: HWND, hWndInsertAfter: ?HWND,
 //                     X: c_int, Y: c_int, cx: c_int, cy: c_int, uFlags: UINT) BOOL;
@@ -313,23 +311,23 @@ pub extern "user32" stdcallcc fn SetWindowTextW(hWnd: HWND, lpString: LPCWSTR) B
 
 // pub extern "user32" stdcallcc fn InvalidateRect(hWnd: HWND, lpRect: ?*const RECT, bErase: BOOL) BOOL;
 
-pub extern "user32" stdcallcc fn ChangeDisplaySettingsW(lpDevMode: ?*DEVMODEW, dwFlags: DWORD) LONG;
+pub extern "user32" fn ChangeDisplaySettingsW(lpDevMode: ?*DEVMODEW, dwFlags: DWORD) callconv(.Stdcall) LONG;
 
-pub extern "user32" stdcallcc fn ShowCursor(bShow: BOOL) c_int;
+pub extern "user32" fn ShowCursor(bShow: BOOL) callconv(.Stdcall) c_int;
 
-pub extern "user32" stdcallcc fn AdjustWindowRectEx(lpRect: *RECT, dwStyle: DWORD, bMenu: BOOL, dwExStyle: DWORD) BOOL;
+pub extern "user32" fn AdjustWindowRectEx(lpRect: *RECT, dwStyle: DWORD, bMenu: BOOL, dwExStyle: DWORD) callconv(.Stdcall) BOOL;
 
-pub extern "user32" stdcallcc fn TrackMouseEvent(lpEventTrack: *TRACKMOUSEEVENT) BOOL;
+pub extern "user32" fn TrackMouseEvent(lpEventTrack: *TRACKMOUSEEVENT) callconv(.Stdcall) BOOL;
 
-pub extern "shell32" stdcallcc fn DragQueryFileW(hDrop: HDROP, iFile: UINT, lpszFile: ?LPCWSTR, cch: UINT) UINT;
+pub extern "shell32" fn DragQueryFileW(hDrop: HDROP, iFile: UINT, lpszFile: ?LPCWSTR, cch: UINT) callconv(.Stdcall) UINT;
 
-pub extern "shell32" stdcallcc fn DragFinish(hDrop: HDROP) void;
+pub extern "shell32" fn DragFinish(hDrop: HDROP) callconv(.Stdcall) void;
 
-pub extern "user32" stdcallcc fn GetCursorPos(lpPoint: *POINT) BOOL;
+pub extern "user32" fn GetCursorPos(lpPoint: *POINT) callconv(.Stdcall) BOOL;
 
-pub extern "user32" stdcallcc fn ScreenToClient(hWndl: HWND, lpPoint: *POINT) BOOL;
+pub extern "user32" fn ScreenToClient(hWndl: HWND, lpPoint: *POINT) callconv(.Stdcall) BOOL;
 
-pub extern "gdi32" stdcallcc fn GetStockObject(i: INT) HGDIOBJ;
+pub extern "gdi32" fn GetStockObject(i: INT) callconv(.Stdcall) HGDIOBJ;
 
 pub inline fn LOWORD(l: DWORD) WORD {
     return @intCast(WORD, (l & 0xffff));
@@ -347,10 +345,18 @@ pub inline fn HIBYTE(l: WORD) BYTE {
     return @intCast(BYTE, ((l >> 8) & 0xff));
 }
 
-pub inline fn GET_X_LPARAM(lp: LPARAM) c_int {
+pub inline fn GET_X_LPARAM(lp: usize) c_int {
     return @intCast(c_int, @truncate(c_ushort, LOWORD(@intCast(DWORD, lp))));
 }
 
-pub inline fn GET_Y_LPARAM(lp: LPARAM) c_int {
+pub inline fn GET_Y_LPARAM(lp: usize) c_int {
     return @intCast(c_int, @truncate(c_ushort, HIWORD(@intCast(DWORD, lp))));
+}
+
+pub inline fn MAKEINTRESOURCEW(w: WORD) [*:0]const WCHAR {
+    var tmp = @intCast(usize, w);
+    var p = @ptrCast(*const [*:0]const WCHAR, &tmp);
+    return p.*;
+
+    
 }

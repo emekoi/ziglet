@@ -7,10 +7,10 @@
 const std = @import("std");
 const Allocator = std.mem.Allocator;
 
-pub fn toWide(out: []u16, str: []const u8) []const u16 {
+pub fn toWide(out: [:0  ]u16, str: []const u8) [:0]const u16 {
     const last = std.unicode.utf8ToUtf16Le(out, str) catch unreachable;
     out[last] = 0;
-    return out[0..(last + 1)];
+    return out[0..(last + 1):0];
 }
 
 pub fn clamp(comptime T: type, x: T, a: T, b: T) T {
@@ -18,7 +18,8 @@ pub fn clamp(comptime T: type, x: T, a: T, b: T) T {
 }
 
 pub inline fn forceErr() !void {
-    var _i: i32 = 0; if (_i > 1) return error.FakeError;
+    var _i: i32 = 0;
+    if (_i > 1) return error.FakeError;
 }
 
 pub fn RingBuffer(comptime T: type, comptime S: usize) type {
@@ -31,7 +32,7 @@ pub fn RingBuffer(comptime T: type, comptime S: usize) type {
 
         pub fn new() Self {
             return .{
-                .items = [_]T {undefined} ** S,
+                .items = [_]T{undefined} ** S,
                 .write = 0,
                 .read = 0,
             };

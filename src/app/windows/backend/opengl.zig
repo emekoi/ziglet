@@ -31,27 +31,27 @@ const GLclampd = f64;
 const GLvoid = *c_void;
 
 // opengl function pointers
-const PFNGLARRAYELEMENTEXTPROC = ?stdcallcc fn (GLint) void;
-const PFNGLDRAWARRAYSEXTPROC = ?stdcallcc fn (GLenum, GLint, GLsizei) void;
-const PFNGLVERTEXPOINTEREXTPROC = ?stdcallcc fn (GLint, GLenum, GLsizei, GLsizei, ?*const GLvoid) void;
-const PFNGLNORMALPOINTEREXTPROC = ?stdcallcc fn (GLenum, GLsizei, GLsizei, ?*const GLvoid) void;
-const PFNGLCOLORPOINTEREXTPROC = ?stdcallcc fn (GLint, GLenum, GLsizei, GLsizei, ?*const GLvoid) void;
-const PFNGLINDEXPOINTEREXTPROC = ?stdcallcc fn (GLenum, GLsizei, GLsizei, ?*const GLvoid) void;
-const PFNGLTEXCOORDPOINTEREXTPROC = ?stdcallcc fn (GLint, GLenum, GLsizei, GLsizei, ?*const GLvoid) void;
-const PFNGLEDGEFLAGPOINTEREXTPROC = ?stdcallcc fn (GLsizei, GLsizei, ?*const GLboolean) void;
-const PFNGLGETPOINTERVEXTPROC = ?stdcallcc fn (GLenum, ?*(?*GLvoid)) void;
-const PFNGLARRAYELEMENTARRAYEXTPROC = ?stdcallcc fn (GLenum, GLsizei, ?*const GLvoid) void;
-const PFNGLDRAWRANGEELEMENTSWINPROC = ?stdcallcc fn (GLenum, GLuint, GLuint, GLsizei, GLenum, ?*const GLvoid) void;
-const PFNGLADDSWAPHINTRECTWINPROC = ?stdcallcc fn (GLint, GLint, GLsizei, GLsizei) void;
-const PFNGLCOLORTABLEEXTPROC = ?stdcallcc fn (GLenum, GLenum, GLsizei, GLenum, GLenum, ?*const GLvoid) void;
-const PFNGLCOLORSUBTABLEEXTPROC = ?stdcallcc fn (GLenum, GLsizei, GLsizei, GLenum, GLenum, ?*const GLvoid) void;
-const PFNGLGETCOLORTABLEEXTPROC = ?stdcallcc fn (GLenum, GLenum, GLenum, ?*GLvoid) void;
-const PFNGLGETCOLORTABLEPARAMETERIVEXTPROC = ?stdcallcc fn (GLenum, GLenum, ?*GLint) void;
-const PFNGLGETCOLORTABLEPARAMETERFVEXTPROC = ?stdcallcc fn (GLenum, GLenum, ?*GLfloat) void;
+const PFNGLARRAYELEMENTEXTPROC = ?fn (GLint) callconv(.Stdcall) void;
+const PFNGLDRAWARRAYSEXTPROC = ?fn (GLenum, GLint, GLsizei) callconv(.Stdcall) void;
+const PFNGLVERTEXPOINTEREXTPROC = ?fn (GLint, GLenum, GLsizei, GLsizei, ?*const GLvoid) callconv(.Stdcall) void;
+const PFNGLNORMALPOINTEREXTPROC = ?fn (GLenum, GLsizei, GLsizei, ?*const GLvoid) callconv(.Stdcall) void;
+const PFNGLCOLORPOINTEREXTPROC = ?fn (GLint, GLenum, GLsizei, GLsizei, ?*const GLvoid) callconv(.Stdcall) void;
+const PFNGLINDEXPOINTEREXTPROC = ?fn (GLenum, GLsizei, GLsizei, ?*const GLvoid) callconv(.Stdcall) void;
+const PFNGLTEXCOORDPOINTEREXTPROC = ?fn (GLint, GLenum, GLsizei, GLsizei, ?*const GLvoid) callconv(.Stdcall) void;
+const PFNGLEDGEFLAGPOINTEREXTPROC = ?fn (GLsizei, GLsizei, ?*const GLboolean) callconv(.Stdcall) void;
+const PFNGLGETPOINTERVEXTPROC = ?fn (GLenum, ?*(?*GLvoid)) callconv(.Stdcall) void;
+const PFNGLARRAYELEMENTARRAYEXTPROC = ?fn (GLenum, GLsizei, ?*const GLvoid) callconv(.Stdcall) void;
+const PFNGLDRAWRANGEELEMENTSWINPROC = ?fn (GLenum, GLuint, GLuint, GLsizei, GLenum, ?*const GLvoid) callconv(.Stdcall) void;
+const PFNGLADDSWAPHINTRECTWINPROC = ?fn (GLint, GLint, GLsizei, GLsizei) callconv(.Stdcall) void;
+const PFNGLCOLORTABLEEXTPROC = ?fn (GLenum, GLenum, GLsizei, GLenum, GLenum, ?*const GLvoid) callconv(.Stdcall) void;
+const PFNGLCOLORSUBTABLEEXTPROC = ?fn (GLenum, GLsizei, GLsizei, GLenum, GLenum, ?*const GLvoid) callconv(.Stdcall) void;
+const PFNGLGETCOLORTABLEEXTPROC = ?fn (GLenum, GLenum, GLenum, ?*GLvoid) callconv(.Stdcall) void;
+const PFNGLGETCOLORTABLEPARAMETERIVEXTPROC = ?fn (GLenum, GLenum, ?*GLint) callconv(.Stdcall) void;
+const PFNGLGETCOLORTABLEPARAMETERFVEXTPROC = ?fn (GLenum, GLenum, ?*GLfloat) callconv(.Stdcall) void;
 
 // wgl extentions
-const PFNWGLCREATECONTEXTATTRIBSARBPROC = ?stdcallcc fn (HDC, HGLRC, ?*const c_int) HGLRC;
-const PFNWGLCHOOSEPIXELFORMATARBPROC = ?stdcallcc fn (HDC, ?*const c_int, ?*const FLOAT, UINT, ?*c_int, ?*UINT) BOOL;
+const PFNWGLCREATECONTEXTATTRIBSARBPROC = ?fn (HDC, HGLRC, ?*const c_int) callconv(.Stdcall) HGLRC;
+const PFNWGLCHOOSEPIXELFORMATARBPROC = ?fn (HDC, ?*const c_int, ?*const FLOAT, UINT, ?*c_int, ?*UINT) callconv(.Stdcall) BOOL;
 
 const PIXELFORMATDESCRIPTOR = extern struct {
     nSize: WORD = @sizeOf(PIXELFORMATDESCRIPTOR),
@@ -82,21 +82,21 @@ const PIXELFORMATDESCRIPTOR = extern struct {
     dwDamageMask: DWORD = 0,
 };
 
-extern "gdi32" stdcallcc fn StretchDIBits(hdc: HDC, xDest: c_int, yDest: c_int, DestWidth: c_int, DestHeight: c_int, xSrc: c_int, ySrc: c_int, SrcWidth: c_int, SrcHeight: c_int, lpBits: ?*const c_void, lpbmi: ?*const BITMAPINFO, iUsage: UINT, rop: DWORD) c_int;
+extern "gdi32" fn StretchDIBits(hdc: HDC, xDest: c_int, yDest: c_int, DestWidth: c_int, DestHeight: c_int, xSrc: c_int, ySrc: c_int, SrcWidth: c_int, SrcHeight: c_int, lpBits: ?*const c_void, lpbmi: ?*const BITMAPINFO, iUsage: UINT, rop: DWORD) callconv(.Stdcall) c_int;
 
-extern "gdi32" stdcallcc fn ChoosePixelFormat(hdc: HDC, ppfd: ?*const PIXELFORMATDESCRIPTOR) c_int;
+extern "gdi32" fn ChoosePixelFormat(hdc: HDC, ppfd: ?*const PIXELFORMATDESCRIPTOR) callconv(.Stdcall) c_int;
 
-extern "gdi32" stdcallcc fn DescribePixelFormat(hdc: HDC, iPixelFormat: c_int, nBytes: UINT, ppfd: *PIXELFORMATDESCRIPTOR) c_int;
+extern "gdi32" fn DescribePixelFormat(hdc: HDC, iPixelFormat: c_int, nBytes: UINT, ppfd: *PIXELFORMATDESCRIPTOR) callconv(.Stdcall) c_int;
 
-extern "gdi32" stdcallcc fn SetPixelFormat(hdc: HDC, format: c_int, ppfd: ?*const PIXELFORMATDESCRIPTOR) BOOL;
+extern "gdi32" fn SetPixelFormat(hdc: HDC, format: c_int, ppfd: ?*const PIXELFORMATDESCRIPTOR) callconv(.Stdcall) BOOL;
 
-extern "opengl32" stdcallcc fn wglCreateContext(arg0: HDC) ?HGLRC;
+extern "opengl32" fn wglCreateContext(arg0: HDC) callconv(.Stdcall) ?HGLRC;
 
-extern "opengl32" stdcallcc fn wglMakeCurrent(arg0: ?HDC, arg1: ?HGLRC) BOOL;
+extern "opengl32" fn wglMakeCurrent(arg0: ?HDC, arg1: ?HGLRC) callconv(.Stdcall) BOOL;
 
-extern "opengl32" stdcallcc fn wglDeleteContext(arg0: HGLRC) BOOL;
+extern "opengl32" fn wglDeleteContext(arg0: HGLRC) callconv(.Stdcall) BOOL;
 
-extern "opengl32" stdcallcc fn wglGetProcAddress(LPCSTR) ?PROC;
+extern "opengl32" fn wglGetProcAddress(LPCSTR) callconv(.Stdcall) ?PROC;
 
 pub const OpenGLError = error{
     InitError,
@@ -128,12 +128,12 @@ pub const Context = struct {
                 return error.InitError;
             }
         } else {
-            const attrib = [_]c_int {
-                WGL_DRAW_TO_WINDOW_ARB, GL_TRUE,
-                WGL_ACCELERATION_ARB, WGL_FULL_ACCELERATION_ARB,
-                WGL_SUPPORT_OPENGL_ARB, GL_TRUE,
-                WGL_DOUBLE_BUFFER_ARB, GL_TRUE,
-                WGL_PIXEL_TYPE_ARB, WGL_TYPE_RGBA_ARB,
+            const attrib = [_]c_int{
+                WGL_DRAW_TO_WINDOW_ARB,           GL_TRUE,
+                WGL_ACCELERATION_ARB,             WGL_FULL_ACCELERATION_ARB,
+                WGL_SUPPORT_OPENGL_ARB,           GL_TRUE,
+                WGL_DOUBLE_BUFFER_ARB,            GL_TRUE,
+                WGL_PIXEL_TYPE_ARB,               WGL_TYPE_RGBA_ARB,
                 WGL_FRAMEBUFFER_SRGB_CAPABLE_ARB, GL_TRUE,
                 0,
             };

@@ -32,7 +32,7 @@ const Backend = union(@TagType(ziglet.gfx.Backend)) {
     }
 };
 
-fn intToKey(lParam: native.LPARAM) Key {
+fn intToKey(lParam: usize) Key {
     return switch (lParam & 0x1ff) {
         0x00B => Key.Key0,
         0x002 => Key.Key1,
@@ -164,11 +164,12 @@ pub const WindowImpl = struct {
         return null;
     }
 
-    stdcallcc fn wnd_proc(hWnd: native.HWND, msg: native.UINT, wParam: native.WPARAM, lParam: native.LPARAM) native.LRESULT {
-        var result: native.LRESULT = 0;
+    fn wnd_proc(hWnd: native.HWND, msg: native.UINT, wParam: native.WPARAM, lParam_: native.LPARAM) callconv(.Stdcall) native.LRESULT {
+        var result: native.LRESULT = null;
+        const lParam = @ptrToInt(lParam_);
 
         var self = @intToPtr(?*WindowImpl, native.GetWindowLongPtrW(hWnd, native.GWLP_USERDATA)) orelse {
-            return native.DefWindowProcW(hWnd, msg, wParam, lParam);
+            return native.DefWindowProcW(hWnd, msg, wParam, lParam_);
         };
 
         var window = @fieldParentPtr(app.Window, "impl", self);
@@ -267,8 +268,9 @@ pub const WindowImpl = struct {
 
                 var index: c_uint = 0;
                 while (index < count) : (index += 1) {
-                    var in_buffer: [native.PATH_MAX_WIDE]u16 = undefined;
-                    var len = native.DragQueryFileW(hDrop, index, in_buffer[0..].ptr, in_buffer.len);
+                    var in_buffer: [native.PATH_MAX_WIDE: 0]u16 = undefined;
+                    var len = native.DragQueryFileW(hDrop, index, in_buffer[0..], in_buffer.len);
+                    std.debug.warn("len: {} {}\n", .{len, native.PATH_MAX_WIDE});
                     var res = std.unicode.utf16leToUtf8Alloc(window.allocator, in_buffer[0..len]) catch unreachable;
                     window.event_pump.push(Event{
                         .FileDroppped = res,
@@ -278,7 +280,7 @@ pub const WindowImpl = struct {
                 native.DragFinish(hDrop);
             },
             else => {
-                return native.DefWindowProcW(hWnd, msg, wParam, lParam);
+                return native.DefWindowProcW(hWnd, msg, wParam, lParam_);
             },
         }
 
@@ -286,7 +288,7 @@ pub const WindowImpl = struct {
     }
 
     fn open_window(options: app.WindowOptions) !native.HWND {
-        var wide_title = [_]u16{0} ** 512;
+        var wide_title = [_:0]u16{0} ** 512;
         const wtitle = internals.toWide(&wide_title, options.title);
 
         const wcex = native.WNDCLASSEX{
@@ -375,13 +377,12 @@ pub const WindowImpl = struct {
     pub fn init(self: *WindowImpl, options: app.WindowOptions) !void {
         self.* = .{
             .handle = try open_window(options),
-            .backend = undefined
+            .backend = undefined,
         };
 
         _ = native.SetWindowLongPtrW(self.handle, native.GWLP_USERDATA, @ptrToInt(self));
         errdefer self.deinit();
         self.backend = try init_backend(self, options);
-        
     }
 
     pub fn deinit(self: *WindowImpl) void {

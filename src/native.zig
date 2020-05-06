@@ -6,7 +6,7 @@
 
 const builtin = @import("builtin");
 
-pub usingnamespace switch (builtin.os) {
+pub usingnamespace switch (builtin.os.tag) {
     .windows => @import("native/windows.zig"),
-    else => @compileError("unsupported OS"), 
+    else => @compileError("unsupported OS"),
 };

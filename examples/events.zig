@@ -16,7 +16,7 @@ const Event = app.event.Event;
 const Window = app.Window;
 
 pub fn main() !void {
-    var alloc = std.heap.direct_allocator;
+    var alloc = std.heap.page_allocator;
 
     const opts  = ziglet.app.WindowOptions {
         .width = 512,
@@ -35,7 +35,7 @@ pub fn main() !void {
         while (pump.pop()) |event| {
             switch (event) {
                 Event.KeyDown => |key| {
-                    std.debug.warn("KeyDown: {}\n", key);
+                    std.debug.warn("KeyDown: {}\n", .{key});
                     switch (key) {
                         Key.Escape => {
                             w.should_close = true;
@@ -44,23 +44,23 @@ pub fn main() !void {
                         else => continue,
                     }
                 },
-                Event.KeyUp => |key| std.debug.warn("KeyUp: {}\n", key),
-                Event.Char => |char| std.debug.warn("Char: {}\n", char),
-                Event.MouseDown => |btn| std.debug.warn("MouseDown: {}\n", btn),
-                Event.MouseUp => |btn| std.debug.warn("MouseUp: {}\n", btn),
-                Event.MouseScroll => |scroll| std.debug.warn("MouseScroll: {}, {}\n", scroll[0], scroll[1]),
-                Event.MouseMove => |coord| std.debug.warn("MouseMove: {}, {}\n", coord[0], coord[1]),
-                Event.MouseEnter => std.debug.warn("MouseEnter\n"),
-                Event.MouseLeave => std.debug.warn("MouseLeave\n"),
-                Event.Resized => |size| std.debug.warn("Resized: {}, {}\n", size[0], size[1]),
-                Event.Iconified => std.debug.warn("Iconified\n"),
-                Event.Restored => std.debug.warn("Restored\n"),
+                Event.KeyUp => |key| std.debug.warn("KeyUp: {}\n", .{key}),
+                Event.Char => |char| std.debug.warn("Char: {}\n", .{char}),
+                Event.MouseDown => |btn| std.debug.warn("MouseDown: {}\n", .{btn}),
+                Event.MouseUp => |btn| std.debug.warn("MouseUp: {}\n", .{btn}),
+                Event.MouseScroll => |scroll| std.debug.warn("MouseScroll: {}, {}\n", .{scroll[0], scroll[1]}),
+                Event.MouseMove => |coord| std.debug.warn("MouseMove: {}, {}\n", .{coord[0], coord[1]}),
+                Event.MouseEnter => std.debug.warn("MouseEnter\n", .{}),
+                Event.MouseLeave => std.debug.warn("MouseLeave\n", .{}),
+                Event.Resized => |size| std.debug.warn("Resized: {}, {}\n", .{size[0], size[1]}),
+                Event.Iconified => std.debug.warn("Iconified\n", .{}),
+                Event.Restored => std.debug.warn("Restored\n", .{}),
                 Event.FileDroppped => |path| {
-                    std.debug.warn("FileDroppped: {}\n", path);
+                    std.debug.warn("FileDroppped: {}\n", .{path});
                     w.allocator.free(path);
                 },
                 else => {
-                    std.debug.warn("invalid event\n");
+                    std.debug.warn("invalid event\n", .{});
                 },
             }
         }

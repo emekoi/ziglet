@@ -18,7 +18,7 @@ const examples = [_]Example{Example.new("events", "examples/events.zig", "how to
 
 pub fn build(builder: *Builder) void {
     const mode = builder.standardReleaseOptions();
-    builder.setInstallPrefix(".");
+    // builder.setInstallPrefix(".");
 
     // building and running examples
     const examples_step = builder.step("examples", "build the examples");
@@ -32,14 +32,15 @@ pub fn build(builder: *Builder) void {
         exe.setBuildMode(mode);
 
         const run_cmd = exe.run();
-        const run_step = builder.step(builder.fmt("run-{}", example.output), example.description orelse "");
+        const run_step = builder.step(builder.fmt("run-{}", .{example.output}), example.description orelse "");
         run_step.dependOn(&run_cmd.step);
     }
 
     // formatting source files
     const fmt_step = builder.step("fmt", "format source files");
-    const fmt_run = builder.addSystemCommand([_][]const u8{
+    const fmt_run = builder.addSystemCommand(&[_][]const u8{
         builder.zig_exe, "fmt", "examples", "src", "build.zig",
     });
     fmt_step.dependOn(&fmt_run.step);
+    // builder.default_step.dependOn(fmt_step);
 }
